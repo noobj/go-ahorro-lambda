@@ -5,42 +5,27 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"time"
 
-	"github.com/aws/aws-lambda-go/events"
+	"github.com/noobj/swim-crowd-lambda-go/internal/mongodb"
 
-	"github.com/joho/godotenv"
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Response events.APIGatewayProxyResponse
 
-func initMongoDB() *mongo.Client {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
-
-	uri := os.Getenv("MONGODB_URI")
-
-	if uri == "" {
-		log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
-	}
-
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-
-	if err != nil {
-		panic(err)
-	}
-
-	return client
+type Entry struct {
+	Id     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Amount int
+	Time   string
 }
 
-func Handler(ctx context.Context) (Response, error) {
-	client := initMongoDB()
+func Handler(request events.APIGatewayProxyRequest) (Response, error) {
+	client := mongodb.InitMongoDB()
+	fmt.Println(request.QueryStringParameters["startDate"])
 	defer func() {
 		if err := client.Disconnect(context.TODO()); err != nil {
 			panic(err)
@@ -52,31 +37,30 @@ func Handler(ctx context.Context) (Response, error) {
 	start := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local).Format(timeFormat)
 	end := time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 999999999, time.Local).Format(timeFormat)
 	coll := client.Database("swimCrowdDB").Collection("entries")
-	filter := bson.D{
+	matchStage := bson.D{{"$match", bson.D{
 		{"$and",
 			bson.A{
 				bson.D{{"time", bson.D{{"$gt", start}}}},
 				bson.D{{"time", bson.D{{"$lte", end}}}},
 			},
 		},
-	}
+	}}}
+	fmt.Println(matchStage)
+
+	filter := bson.D{{"time", bson.D{{"$gt", "2022-07-01"}}}}
+
 	cursor, err := coll.Find(context.TODO(), filter)
 	if err != nil {
 		panic(err)
 	}
-	var results []bson.D
+	var results []Entry
 	if err = cursor.All(context.TODO(), &results); err != nil {
 		panic(err)
 	}
-
-	for _, result := range results {
-		fmt.Println(result)
-	}
-
 	var buf bytes.Buffer
 
 	body, err := json.Marshal(map[string]interface{}{
-		"message": "Go Serverless v1.0! Your function executed successfully!",
+		"data": results,
 	})
 	if err != nil {
 		return Response{StatusCode: 404}, err
@@ -97,6 +81,6 @@ func Handler(ctx context.Context) (Response, error) {
 }
 
 func main() {
-	// lambda.Start(Handler)
-	Handler(context.TODO())
+	lambda.Start(Handler)
+	// fmt.Println(Handler())
 }

@@ -59,10 +59,10 @@ package:
 
 functions:
   hello:
-    handler: bin/hello
+    handler: bin/dailyfetch
     events:
       - httpApi:
-          path: /hello
+          path: /crowd/daily
           method: get
   world:
     handler: bin/world

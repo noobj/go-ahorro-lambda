@@ -1,4 +1,4 @@
-module swim-crowd-lambda-go
+module github.com/noobj/swim-crowd-lambda-go
 
 go 1.18
 
