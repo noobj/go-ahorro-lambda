@@ -26,6 +26,10 @@ provider:
   name: aws
   runtime: go1.x
   region: ap-southeast-1
+  environment:
+    MONGO_USER: ${ssm:/lambda/ahorro/prod/MONGO_USER}
+    MONGO_PASSWORD: ${ssm:/lambda/ahorro/prod/MONGO_PASSWORD}
+    MONGO_PATH: ${ssm:/lambda/swimpool/prod/MONGO_PATH}
 
 # you can overwrite defaults here
 #  stage: dev
@@ -58,7 +62,7 @@ package:
     - ./bin/**
 
 functions:
-  hello:
+  dailyfetch:
     handler: bin/dailyfetch
     events:
       - httpApi:
