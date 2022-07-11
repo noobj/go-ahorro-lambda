@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/noobj/swim-crowd-lambda-go/internal/middleware"
 	"github.com/noobj/swim-crowd-lambda-go/internal/mongodb"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -14,8 +15,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
-
-type Response events.APIGatewayProxyResponse
 
 type EntryGroup struct {
 	Date    string  `json:"date" bson:"_id,omitempty"`
@@ -43,7 +42,8 @@ func processTimeQueryString(tString string, start bool) string {
 	}
 }
 
-func Handler(request events.APIGatewayProxyRequest) (Response, error) {
+func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+
 	client := mongodb.InitMongoDB()
 	defer func() {
 		if err := client.Disconnect(context.TODO()); err != nil {
@@ -119,11 +119,11 @@ func Handler(request events.APIGatewayProxyRequest) (Response, error) {
 
 	body, err := json.Marshal(results)
 	if err != nil {
-		return Response{StatusCode: 404}, err
+		return events.APIGatewayProxyResponse{StatusCode: 404}, err
 	}
 	json.HTMLEscape(&buf, body)
 
-	resp := Response{
+	resp := events.APIGatewayProxyResponse{
 		StatusCode:      200,
 		IsBase64Encoded: false,
 		Body:            buf.String(),
@@ -136,5 +136,5 @@ func Handler(request events.APIGatewayProxyRequest) (Response, error) {
 }
 
 func main() {
-	lambda.Start(Handler)
+	lambda.Start(middleware.Logging(Handler))
 }
