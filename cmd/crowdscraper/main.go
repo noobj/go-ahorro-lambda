@@ -33,7 +33,7 @@ func Handler(ctx context.Context) (events.APIGatewayProxyResponse, error) {
 
 	c.Wait()
 
-	client := mongodb.InitMongoDB()
+	client := mongodb.ClientInstance
 	defer func() {
 		if err := client.Disconnect(context.TODO()); err != nil {
 			panic(err)

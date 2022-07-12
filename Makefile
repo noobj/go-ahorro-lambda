@@ -1,7 +1,7 @@
 .PHONY: build clean deploy
 
 build:
-	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o bin/dailyfetch cmd/dailyfetch/main.go
+	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o bin/dailyfetch cmd/dailyfetch/*
 	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o bin/crowdscraper cmd/crowdscraper/main.go
 
 clean:

@@ -12,7 +12,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func InitMongoDB() *mongo.Client {
+var ClientInstance *mongo.Client
+
+func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}
@@ -33,6 +35,6 @@ func InitMongoDB() *mongo.Client {
 	if err != nil {
 		panic(err)
 	}
-
-	return client
+	fmt.Println("Creating single instance now.")
+	ClientInstance = client
 }
