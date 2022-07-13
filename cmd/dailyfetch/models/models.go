@@ -1,8 +1,7 @@
-package main
+package models
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/noobj/swim-crowd-lambda-go/internal/mongodb"
@@ -10,22 +9,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func processTimeQueryString(tString string, start bool) string {
-	timeFormat := "2006-01-02"
-	parsedTime, err := time.Parse(timeFormat, tString)
-	if err != nil {
-		panic(fmt.Sprintf("Could not parse time\n %s", err))
-	}
-
-	if start {
-		return time.Date(parsedTime.Year(), parsedTime.Month(), parsedTime.Day(), 0, 0, 0, 0, time.Local).Format(OutputFormat)
-	} else {
-		return time.Date(parsedTime.Year(), parsedTime.Month(), parsedTime.Day(), 23, 59, 59, 999999999, time.Local).Format(OutputFormat)
-	}
+type EntryGroup struct {
+	Date    string  `json:"date" bson:"_id,omitempty"`
+	Entries []Entry `json:"entries" bson:"entries"`
 }
 
-func fetchEntriesByTimeRange(start string, end string) []EntryGroup {
-	client := mongodb.ClientInstance
+type Entry struct {
+	Amount int    `json:"amount"`
+	Time   string `json:"time"`
+}
+
+type EntryModel struct{}
+
+func (m EntryModel) FetchEntriesByTimeRange(start string, end string) []EntryGroup {
+	client := mongodb.GetInstance()
 	defer func() {
 		if err := client.Disconnect(context.TODO()); err != nil {
 			panic(err)
