@@ -9,7 +9,9 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/gocolly/colly"
-	"github.com/noobj/swim-crowd-lambda-go/internal/mongodb"
+	container "github.com/golobby/container/v3"
+	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
+	EntryRepository "github.com/noobj/swim-crowd-lambda-go/internal/repositories/entry"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -33,18 +35,11 @@ func Handler(ctx context.Context) (events.APIGatewayProxyResponse, error) {
 
 	c.Wait()
 
-	client := mongodb.GetInstance()
-	defer func() {
-		if err := client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
-	coll := client.Database("swimCrowdDB").Collection("entries")
+	var entryRepository repositories.Repository
+	container.Resolve(&entryRepository)
+
 	doc := bson.D{{"amount", crowdCounts[2]}, {"time", time.Now().Format("2006-01-02 15:04")}}
-	_, err := coll.InsertOne(context.TODO(), doc)
-	if err != nil {
-		panic(err)
-	}
+	entryRepository.InsertOne(doc)
 
 	fmt.Println("Scrapping done.")
 
@@ -56,5 +51,9 @@ func Handler(ctx context.Context) (events.APIGatewayProxyResponse, error) {
 }
 
 func main() {
+	container.Singleton(func() repositories.Repository {
+		return &EntryRepository.EntryModel{}
+	})
+
 	lambda.Start(Handler)
 }
