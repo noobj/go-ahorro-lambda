@@ -14,8 +14,9 @@ import (
 
 type MockEntryModel struct{}
 
-func (m MockEntryModel) InsertOne(doc bson.D) {
-
+func (m MockEntryModel) InsertOne(doc bson.D) {}
+func (m MockEntryModel) Disconnect() func() {
+	return func() {}
 }
 
 func (m MockEntryModel) Aggregate(stages []bson.D) *mongo.Cursor {
@@ -43,7 +44,7 @@ func (m MockEntryModel) Aggregate(stages []bson.D) *mongo.Cursor {
 
 func TestHandler(t *testing.T) {
 	container.Singleton(func() repositories.Repository {
-		return &MockEntryModel{}
+		return MockEntryModel{}
 	})
 	res, err := Handler(context.TODO(), events.APIGatewayProxyRequest{})
 

@@ -48,6 +48,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	var entryRepository repositories.Repository
 	container.Resolve(&entryRepository)
+	defer entryRepository.Disconnect()()
 
 	matchStage := bson.D{{"$match", bson.D{
 		{"$and",
@@ -120,7 +121,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 func main() {
 	container.Singleton(func() repositories.Repository {
-		return &EntryRepository.EntryModel{}
+		return EntryRepository.New()
 	})
 
 	lambda.Start(middleware.Logging(Handler))

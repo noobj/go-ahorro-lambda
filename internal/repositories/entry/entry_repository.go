@@ -20,30 +20,35 @@ type Entry struct {
 }
 
 type EntryModel struct {
+	Client     *mongo.Client
+	Collection *mongo.Collection
+}
+
+func New() *EntryModel {
+	return &EntryModel{
+		Client:     mongodb.GetInstance(),
+		Collection: mongodb.GetInstance().Database("swimCrowdDB").Collection("entries"),
+	}
+}
+
+func (m EntryModel) Disconnect() func() {
+	return func() {
+		if err := m.Client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (m EntryModel) InsertOne(doc bson.D) {
-	client := mongodb.GetInstance()
-
-	coll := client.Database("swimCrowdDB").Collection("entries")
-	_, err := coll.InsertOne(context.TODO(), doc)
+	_, err := m.Collection.InsertOne(context.TODO(), doc)
 	if err != nil {
 		panic(err)
 	}
 }
 
+// TODO: should return EntryGroup[] or interface{}
 func (m EntryModel) Aggregate(stages []bson.D) *mongo.Cursor {
-	client := mongodb.GetInstance()
-
-	defer func() {
-		if err := client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
-
-	coll := client.Database("swimCrowdDB").Collection("entries")
-
-	cursor, err := coll.Aggregate(context.TODO(), stages)
+	cursor, err := m.Collection.Aggregate(context.TODO(), stages)
 	if err != nil {
 		panic(err)
 	}

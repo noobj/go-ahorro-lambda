@@ -29,6 +29,10 @@ func (m *MockEntryModel) Aggregate(stages []bson.D) *mongo.Cursor {
 	return cur
 }
 
+func (m *MockEntryModel) Disconnect() func() {
+	return func() {}
+}
+
 type ArgumentType struct {
 	Amount int
 	Time   string

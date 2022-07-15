@@ -13,4 +13,5 @@ type Model struct {
 type Repository interface {
 	Aggregate([]bson.D) *mongo.Cursor
 	InsertOne(bson.D)
+	Disconnect() func()
 }
