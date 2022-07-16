@@ -77,16 +77,15 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		},
 	}}
 
-	cursor := entryRepository.Aggregate([]bson.D{matchStage, groupStage})
+	results := entryRepository.Aggregate([]bson.D{matchStage, groupStage})
 
-	var results []EntryRepository.EntryGroup
+	convertedResults := make([]EntryRepository.EntryGroup, len(results))
 
-	for cursor.Next(context.TODO()) {
-		var result EntryRepository.EntryGroup
-		if err := cursor.Decode(&result); err != nil {
-			panic(err)
-		}
+	for i, result := range results {
+		convertedResults[i] = result.(EntryRepository.EntryGroup)
+	}
 
+	for _, result := range convertedResults {
 		parsedDate, err := time.Parse("2006-01-02", result.Date)
 		if err != nil {
 			panic(err)
@@ -95,9 +94,24 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		result.Date = parsedDate.Format("2006-01-02 (Mon)")
 		results = append(results, result)
 	}
-	if err := cursor.Err(); err != nil {
-		panic(err)
-	}
+
+	// for cursor.Next(context.TODO()) {
+	// 	var result EntryRepository.EntryGroup
+	// 	if err := cursor.Decode(&result); err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	parsedDate, err := time.Parse("2006-01-02", result.Date)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	result.Date = parsedDate.Format("2006-01-02 (Mon)")
+	// 	results = append(results, result)
+	// }
+	// if err := cursor.Err(); err != nil {
+	// 	panic(err)
+	// }
 
 	var buf bytes.Buffer
 

@@ -47,11 +47,18 @@ func (m EntryModel) InsertOne(doc bson.D) {
 }
 
 // TODO: should return EntryGroup[] or interface{}
-func (m EntryModel) Aggregate(stages []bson.D) *mongo.Cursor {
+// needed use generic
+func (m EntryModel) Aggregate(stages []bson.D) []interface{} {
 	cursor, err := m.Collection.Aggregate(context.TODO(), stages)
 	if err != nil {
 		panic(err)
 	}
 
-	return cursor
+	var results []interface{}
+
+	if err = cursor.All(context.TODO(), &results); err != nil {
+		panic(err)
+	}
+
+	return results
 }
