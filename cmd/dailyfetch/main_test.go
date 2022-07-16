@@ -9,7 +9,6 @@ import (
 	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
 	EntryRepositories "github.com/noobj/swim-crowd-lambda-go/internal/repositories/entry"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type MockEntryModel struct{}
@@ -19,7 +18,7 @@ func (m MockEntryModel) Disconnect() func() {
 	return func() {}
 }
 
-func (m MockEntryModel) Aggregate(stages []bson.D) *mongo.Cursor {
+func (m MockEntryModel) Aggregate(stages []bson.D) []EntryRepositories.EntryGroup {
 	fakeData := []EntryRepositories.EntryGroup{
 		{
 			Date: "2022-07-13",
@@ -32,14 +31,7 @@ func (m MockEntryModel) Aggregate(stages []bson.D) *mongo.Cursor {
 		},
 	}
 
-	mockData := make([]interface{}, len(fakeData))
-
-	for i := range fakeData {
-		mockData[i] = fakeData[i]
-	}
-
-	cur, _ := mongo.NewCursorFromDocuments(mockData, nil, nil)
-	return cur
+	return fakeData
 }
 
 func TestHandler(t *testing.T) {

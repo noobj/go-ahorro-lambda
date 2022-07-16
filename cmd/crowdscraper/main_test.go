@@ -8,8 +8,8 @@ import (
 
 	container "github.com/golobby/container/v3"
 	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
+	EntryRepositories "github.com/noobj/swim-crowd-lambda-go/internal/repositories/entry"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type MockEntryModel struct {
@@ -22,11 +22,9 @@ func (m *MockEntryModel) InsertOne(doc bson.D) {
 	m.insertOneArgument = doc
 }
 
-func (m *MockEntryModel) Aggregate(stages []bson.D) *mongo.Cursor {
-
-	mockData := make([]interface{}, 1)
-	cur, _ := mongo.NewCursorFromDocuments(mockData, nil, nil)
-	return cur
+func (m *MockEntryModel) Aggregate(stages []bson.D) []EntryRepositories.EntryGroup {
+	mockData := []EntryRepositories.EntryGroup{}
+	return mockData
 }
 
 func (m *MockEntryModel) Disconnect() func() {
