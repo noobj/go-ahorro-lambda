@@ -9,11 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type EntryGroup struct {
-	Date    string  `json:"date" bson:"_id,omitempty"`
-	Entries []Entry `json:"entries" bson:"entries"`
-}
-
 type Entry struct {
 	Amount int    `json:"amount"`
 	Time   string `json:"time"`
@@ -46,14 +41,13 @@ func (m EntryModel) InsertOne(doc bson.D) {
 	}
 }
 
-// TODO: needed use generic
-func (m EntryModel) Aggregate(stages []bson.D) []EntryGroup {
+func (m EntryModel) Aggregate(stages []bson.D) []any {
 	cursor, err := m.Collection.Aggregate(context.TODO(), stages)
 	if err != nil {
 		panic(err)
 	}
 
-	var results []EntryGroup
+	var results []any
 
 	if err = cursor.All(context.TODO(), &results); err != nil {
 		panic(err)

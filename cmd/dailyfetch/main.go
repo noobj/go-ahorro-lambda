@@ -19,6 +19,11 @@ import (
 
 const OutputFormat = "2006-01-02 15:04:05"
 
+type EntryGroup struct {
+	Date    string                  `json:"date" bson:"_id,omitempty"`
+	Entries []EntryRepository.Entry `json:"entries" bson:"entries"`
+}
+
 func processTimeQueryString(tString string, start bool) string {
 	timeFormat := "2006-01-02"
 	parsedTime, err := time.Parse(timeFormat, tString)
@@ -78,9 +83,13 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}}
 
 	repoResults := entryRepository.Aggregate([]bson.D{matchStage, groupStage})
-	var results []EntryRepository.EntryGroup
+	var results []EntryGroup
 
-	for _, result := range repoResults {
+	for _, repoResult := range repoResults {
+		result, ok := repoResult.(EntryGroup)
+		if ok != true {
+			panic("Repository returns wrong type")
+		}
 		parsedDate, err := time.Parse("2006-01-02", result.Date)
 		if err != nil {
 			panic(err)

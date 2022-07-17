@@ -18,8 +18,8 @@ func (m MockEntryModel) Disconnect() func() {
 	return func() {}
 }
 
-func (m MockEntryModel) Aggregate(stages []bson.D) []EntryRepositories.EntryGroup {
-	fakeData := []EntryRepositories.EntryGroup{
+func (m MockEntryModel) Aggregate(stages []bson.D) []any {
+	fakeData := []EntryGroup{
 		{
 			Date: "2022-07-13",
 			Entries: []EntryRepositories.Entry{
@@ -31,7 +31,13 @@ func (m MockEntryModel) Aggregate(stages []bson.D) []EntryRepositories.EntryGrou
 		},
 	}
 
-	return fakeData
+	var results []any
+
+	for _, data := range fakeData {
+		results = append(results, data)
+	}
+
+	return results
 }
 
 func TestHandler(t *testing.T) {

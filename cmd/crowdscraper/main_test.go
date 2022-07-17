@@ -8,7 +8,6 @@ import (
 
 	container "github.com/golobby/container/v3"
 	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
-	EntryRepositories "github.com/noobj/swim-crowd-lambda-go/internal/repositories/entry"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -22,8 +21,8 @@ func (m *MockEntryModel) InsertOne(doc bson.D) {
 	m.insertOneArgument = doc
 }
 
-func (m *MockEntryModel) Aggregate(stages []bson.D) []EntryRepositories.EntryGroup {
-	mockData := []EntryRepositories.EntryGroup{}
+func (m *MockEntryModel) Aggregate(stages []bson.D) []any {
+	mockData := []any{}
 	return mockData
 }
 
