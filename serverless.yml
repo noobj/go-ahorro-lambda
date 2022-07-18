@@ -29,3 +29,9 @@ functions:
     handler: bin/crowdscraper
     events:
       - schedule: cron(0,30 0-13,23 * * ? *)
+  fetchentries:
+    handler: bin/fetchentries
+    events:
+      - httpApi:
+          path: /ahorro/entry
+          method: get

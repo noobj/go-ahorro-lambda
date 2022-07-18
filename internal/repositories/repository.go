@@ -5,8 +5,8 @@ import (
 )
 
 type Repository interface {
-	// TODO: use generic
 	Aggregate([]bson.D) []any
+	// TODO: use generic for Entry type, not bson
 	InsertOne(bson.D)
 	Disconnect() func()
 }

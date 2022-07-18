@@ -11,7 +11,7 @@ import (
 	"github.com/gocolly/colly"
 	container "github.com/golobby/container/v3"
 	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
-	EntryRepository "github.com/noobj/swim-crowd-lambda-go/internal/repositories/entry"
+	EntryRepository "github.com/noobj/swim-crowd-lambda-go/internal/repositories/swim/entry"
 	"go.mongodb.org/mongo-driver/bson"
 )
 

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	container "github.com/golobby/container/v3"
 	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
-	EntryRepositories "github.com/noobj/swim-crowd-lambda-go/internal/repositories/entry"
+	EntryRepositories "github.com/noobj/swim-crowd-lambda-go/internal/repositories/swim/entry"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -19,8 +19,8 @@ func (m MockEntryModel) Disconnect() func() {
 }
 
 func (m MockEntryModel) Aggregate(stages []bson.D) []any {
-	fakeData := []EntryGroup{
-		{
+	fakeData := []any{
+		EntryGroup{
 			Date: "2022-07-13",
 			Entries: []EntryRepositories.Entry{
 				{
@@ -31,13 +31,13 @@ func (m MockEntryModel) Aggregate(stages []bson.D) []any {
 		},
 	}
 
-	var results []any
+	// var results []any
 
-	for _, data := range fakeData {
-		results = append(results, data)
-	}
+	// for _, data := range fakeData {
+	// 	results = append(results, data)
+	// }
 
-	return results
+	return fakeData
 }
 
 func TestHandler(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/noobj/swim-crowd-lambda-go/internal/middleware"
 	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
-	EntryRepository "github.com/noobj/swim-crowd-lambda-go/internal/repositories/entry"
+	EntryRepository "github.com/noobj/swim-crowd-lambda-go/internal/repositories/swim/entry"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/aws/aws-lambda-go/events"
