@@ -63,8 +63,8 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		{"$expr", bson.D{
 			{"$and", bson.A{
 				bson.D{{"$eq", bson.A{"$user", userId}}},
-				bson.D{{"$gte", bson.A{"$date", "2022-01-01"}}},
-				bson.D{{"$lte", bson.A{"$date", "2022-01-11"}}},
+				bson.D{{"$gte", bson.A{"$date", startFromQuery}}},
+				bson.D{{"$lte", bson.A{"$date", endFromQuery}}},
 				//TODO: how do I spread the slice?
 				// excludeCondition
 			},
@@ -76,7 +76,37 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		{sortColumn, -1}},
 	}}
 
-	repoResults := entryRepository.Aggregate([]bson.D{matchStage, sortStage})
+	groupStage := bson.D{{"$group", bson.D{
+		{"_id", bson.D{
+			{"category", "$category"}},
+		},
+		{"entries", bson.D{
+			{"$push", bson.D{
+				{"_id", "$_id"},
+				{"amount", "$amount"},
+				{"date", "$date"},
+				{"descr", "$descr"},
+			}}},
+		},
+		{"sum", bson.D{{
+			"$sum", "$amount"},
+		}},
+	},
+	}}
+
+	sortSumStage := bson.D{{"$sort", bson.D{
+		{"sum", -1}},
+	}}
+
+	lookupStage := bson.D{{"$lookup", bson.D{
+		{"from", "categories"},
+		{"localField", "_id.category"},
+		{"foreignField", "_id"},
+		{"as", "category"},
+	},
+	}}
+
+	repoResults := entryRepository.Aggregate([]bson.D{matchStage, sortStage, groupStage, sortSumStage, lookupStage})
 
 	fmt.Println(repoResults)
 
