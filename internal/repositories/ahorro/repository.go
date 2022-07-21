@@ -6,12 +6,23 @@ import (
 	"github.com/noobj/swim-crowd-lambda-go/internal/mongodb"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Entry struct {
-	Amount int    `json:"amount"`
-	Time   string `json:"time"`
+	Id     primitive.ObjectID `json:"_id" bson:"_id"`
+	Amount int
+	Date   string
+	Descr  string
+}
+
+type Category struct {
+	Id    primitive.ObjectID `json:"_id" bson:"_id"`
+	Name  string
+	User  primitive.ObjectID
+	Color string
+	V     int `bson:"__v"`
 }
 
 type EntryModel struct {
@@ -41,13 +52,13 @@ func (m EntryModel) InsertOne(doc bson.D) {
 	}
 }
 
-func (m EntryModel) Aggregate(stages []bson.D) []any {
+func (m EntryModel) Aggregate(stages []bson.D) []bson.M {
 	cursor, err := m.Collection.Aggregate(context.TODO(), stages)
 	if err != nil {
 		panic(err)
 	}
 
-	var results []any
+	var results []bson.M
 
 	if err = cursor.All(context.TODO(), &results); err != nil {
 		panic(err)

@@ -16,14 +16,20 @@ import (
 
 type Response events.APIGatewayProxyResponse
 
+type Cate struct {
+	Category primitive.ObjectID `bson:"category,omitempty"`
+}
+
+type EntryCatgegoryBundle struct {
+	Entries  []EntryRepository.Entry    `bson:"entries,omitempty"`
+	Sum      int                        `bson:"sum,omitempty"`
+	Category []EntryRepository.Category `bson:"category,omitempty"`
+}
+
 func checkTimeFormat(format string, timeString string) bool {
 	_, err := time.Parse(format, timeString)
 
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -59,12 +65,12 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	userId, _ := primitive.ObjectIDFromHex("627106d67b2f25ddd3daf964")
 
-	matchStage := bson.D{{"$match", bson.D{
-		{"$expr", bson.D{
-			{"$and", bson.A{
-				bson.D{{"$eq", bson.A{"$user", userId}}},
-				bson.D{{"$gte", bson.A{"$date", startFromQuery}}},
-				bson.D{{"$lte", bson.A{"$date", endFromQuery}}},
+	matchStage := bson.D{{Key: "$match", Value: bson.D{
+		{Key: "$expr", Value: bson.D{
+			{Key: "$and", Value: bson.A{
+				bson.D{{Key: "$eq", Value: bson.A{"$user", userId}}},
+				bson.D{{Key: "$gte", Value: bson.A{"$date", startFromQuery}}},
+				bson.D{{Key: "$lte", Value: bson.A{"$date", endFromQuery}}},
 				//TODO: how do I spread the slice?
 				// excludeCondition
 			},
@@ -72,43 +78,48 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		}},
 	}}
 
-	sortStage := bson.D{{"$sort", bson.D{
-		{sortColumn, -1}},
+	sortStage := bson.D{{Key: "$sort", Value: bson.D{
+		{Key: sortColumn, Value: -1}},
 	}}
 
-	groupStage := bson.D{{"$group", bson.D{
-		{"_id", bson.D{
-			{"category", "$category"}},
-		},
-		{"entries", bson.D{
-			{"$push", bson.D{
-				{"_id", "$_id"},
-				{"amount", "$amount"},
-				{"date", "$date"},
-				{"descr", "$descr"},
+	groupStage := bson.D{{Key: "$group", Value: bson.D{
+		{Key: "_id", Value: "$category"},
+		{Key: "entries", Value: bson.D{
+			{Key: "$push", Value: bson.D{
+				{Key: "_id", Value: "$_id"},
+				{Key: "amount", Value: "$amount"},
+				{Key: "date", Value: "$date"},
+				{Key: "descr", Value: "$descr"},
 			}}},
 		},
-		{"sum", bson.D{{
-			"$sum", "$amount"},
+		{Key: "sum", Value: bson.D{{
+			Key: "$sum", Value: "$amount"},
 		}},
 	},
 	}}
 
-	sortSumStage := bson.D{{"$sort", bson.D{
-		{"sum", -1}},
+	sortSumStage := bson.D{{Key: "$sort", Value: bson.D{
+		{Key: "sum", Value: -1}},
 	}}
 
-	lookupStage := bson.D{{"$lookup", bson.D{
-		{"from", "categories"},
-		{"localField", "_id.category"},
-		{"foreignField", "_id"},
-		{"as", "category"},
+	lookupStage := bson.D{{Key: "$lookup", Value: bson.D{
+		{Key: "from", Value: "categories"},
+		{Key: "localField", Value: "_id"},
+		{Key: "foreignField", Value: "_id"},
+		{Key: "as", Value: "category"},
 	},
 	}}
 
 	repoResults := entryRepository.Aggregate([]bson.D{matchStage, sortStage, groupStage, sortSumStage, lookupStage})
 
-	fmt.Println(repoResults)
+	for repoResult := range repoResults {
+		doc, _ := bson.Marshal(repoResult)
+
+		var test EntryCatgegoryBundle
+		bson.Unmarshal(doc, &test)
+
+		fmt.Printf("%+v\n", test)
+	}
 
 	resp := events.APIGatewayProxyResponse{
 		StatusCode: 200,

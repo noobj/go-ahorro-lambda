@@ -5,7 +5,7 @@ import (
 )
 
 type Repository interface {
-	Aggregate([]bson.D) []any
+	Aggregate([]bson.D) []bson.M
 	// TODO: use generic for Entry type, not bson
 	InsertOne(bson.D)
 	Disconnect() func()

@@ -18,9 +18,9 @@ func (m MockEntryModel) Disconnect() func() {
 	return func() {}
 }
 
-func (m MockEntryModel) Aggregate(stages []bson.D) []any {
-	fakeData := []any{
-		EntryGroup{
+func (m MockEntryModel) Aggregate(stages []bson.D) []bson.M {
+	fakeData := []bson.M{
+		EntryGroup: {
 			Date: "2022-07-13",
 			Entries: []EntryRepositories.Entry{
 				{
