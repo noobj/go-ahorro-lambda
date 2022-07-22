@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	container "github.com/golobby/container/v3"
 	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
-	EntryRepositories "github.com/noobj/swim-crowd-lambda-go/internal/repositories/swim/entry"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -18,14 +17,13 @@ func (m MockEntryModel) Disconnect() func() {
 	return func() {}
 }
 
-func (m MockEntryModel) Aggregate(stages []bson.D) []bson.M {
+func (m MockEntryModel) Aggregate(stages interface{}) []bson.M {
 	fakeData := []bson.M{
-		EntryGroup: {
-			Date: "2022-07-13",
-			Entries: []EntryRepositories.Entry{
+		{"Date": "2022-07-13",
+			"Entries": []bson.M{
 				{
-					Amount: 1234,
-					Time:   "2022-07-13 15:00",
+					"Amount": 1234,
+					"Time":   "2022-07-13 15:00",
 				},
 			},
 		},

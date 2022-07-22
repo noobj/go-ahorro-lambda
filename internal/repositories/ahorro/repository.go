@@ -52,7 +52,7 @@ func (m EntryModel) InsertOne(doc bson.D) {
 	}
 }
 
-func (m EntryModel) Aggregate(stages []bson.D) []bson.M {
+func (m EntryModel) Aggregate(stages interface{}) []bson.M {
 	cursor, err := m.Collection.Aggregate(context.TODO(), stages)
 	if err != nil {
 		panic(err)

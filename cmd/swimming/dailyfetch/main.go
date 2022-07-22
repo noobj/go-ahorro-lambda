@@ -20,8 +20,8 @@ import (
 const OutputFormat = "2006-01-02 15:04:05"
 
 type EntryGroup struct {
-	Date    string                  `json:"date" bson:"_id,omitempty"`
-	Entries []EntryRepository.Entry `json:"entries" bson:"entries"`
+	Date    string                  `json:"date"`
+	Entries []EntryRepository.Entry `json:"entries"`
 }
 
 func processTimeQueryString(tString string, start bool) string {
@@ -55,39 +55,35 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	container.Resolve(&entryRepository)
 	defer entryRepository.Disconnect()()
 
-	matchStage := bson.D{{"$match", bson.D{
-		{"$and",
-			bson.A{
-				bson.D{{"time", bson.D{{"$gt", start}}}},
-				bson.D{{"time", bson.D{{"$lte", end}}}},
-			},
-		},
-	}}}
-
-	groupStage := bson.D{{
-		"$group", bson.D{
-			{
-				"_id", bson.D{{
-					"$substr", bson.A{"$time", 0, 10},
-				}},
-			},
-			{
-				"entries", bson.D{{
-					"$push", bson.D{
-						{"amount", "$amount"},
-						{"time", "$time"},
-					},
-				}},
-			},
+	matchStage := bson.M{"$match": bson.M{
+		"$and": bson.A{
+			bson.M{"time": bson.M{"$gt": start}},
+			bson.M{"time": bson.M{"$lte": end}},
 		},
 	}}
 
-	repoResults := entryRepository.Aggregate([]bson.D{matchStage, groupStage})
+	groupStage := bson.M{
+		"$group": bson.M{
+			"_id": bson.M{
+				"$substr": bson.A{"$time", 0, 10},
+			},
+			"entries": bson.M{
+				"$push": bson.M{
+					"amount": "$amount",
+					"time":   "$time",
+				},
+			},
+		},
+	}
+
+	repoResults := entryRepository.Aggregate([]bson.M{matchStage, groupStage})
 	var results []EntryGroup
 
 	for _, repoResult := range repoResults {
-		result, ok := repoResult.(EntryGroup)
-		if ok != true {
+		var result EntryGroup
+		doc, _ := bson.Marshal(repoResult)
+		err := bson.Unmarshal(doc, &result)
+		if err != nil {
 			panic("Repository returns wrong type")
 		}
 		parsedDate, err := time.Parse("2006-01-02", result.Date)

@@ -21,8 +21,8 @@ func (m *MockEntryModel) InsertOne(doc bson.D) {
 	m.insertOneArgument = doc
 }
 
-func (m *MockEntryModel) Aggregate(stages []bson.D) []any {
-	mockData := []any{}
+func (m *MockEntryModel) Aggregate(stages interface{}) []bson.M {
+	mockData := []bson.M{}
 	return mockData
 }
 
