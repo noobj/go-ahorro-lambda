@@ -38,7 +38,7 @@ type ArgumentType struct {
 func TestHandler(t *testing.T) {
 	mockEntryModel := MockEntryModel{}
 
-	container.Singleton(func() repositories.Repository {
+	container.Singleton(func() repositories.IRepository {
 		return &mockEntryModel
 	})
 	if _, err := Handler(context.TODO()); err != nil {

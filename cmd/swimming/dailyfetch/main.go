@@ -51,7 +51,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		end = processTimeQueryString(endFromQuery, false)
 	}
 
-	var entryRepository repositories.Repository
+	var entryRepository repositories.IRepository
 	container.Resolve(&entryRepository)
 	defer entryRepository.Disconnect()()
 
@@ -116,7 +116,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 }
 
 func main() {
-	container.Singleton(func() repositories.Repository {
+	container.Singleton(func() repositories.IRepository {
 		return EntryRepository.New()
 	})
 

@@ -8,22 +8,28 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	container "github.com/golobby/container/v3"
+	"github.com/noobj/swim-crowd-lambda-go/internal/helpers"
 	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
-	EntryRepository "github.com/noobj/swim-crowd-lambda-go/internal/repositories/ahorro"
+	AhorroRepository "github.com/noobj/swim-crowd-lambda-go/internal/repositories/ahorro"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Response events.APIGatewayProxyResponse
 
-type Cate struct {
-	Category primitive.ObjectID `bson:"category,omitempty"`
+type AggregateResult struct {
+	Entries  []AhorroRepository.Entry
+	Sum      int
+	Category []AhorroRepository.Category
 }
 
-type EntryCatgegoryBundle struct {
-	Entries  []EntryRepository.Entry    `bson:"entries,omitempty"`
-	Sum      int                        `bson:"sum,omitempty"`
-	Category []EntryRepository.Category `bson:"category,omitempty"`
+type CategoryEntriesBundle struct {
+	Id         primitive.ObjectID       `json:"_id"`
+	Sum        int                      `json:"sum"`
+	Percentage string                   `json:"percentage"`
+	Name       string                   `json:"name"`
+	Entries    []AhorroRepository.Entry `json:"entries"`
+	Color      string                   `json:"color"`
 }
 
 func checkTimeFormat(format string, timeString string) bool {
@@ -59,10 +65,11 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	// 		excludeCondition = append(excludeCondition, condition)
 	// 	}
 	// }
-	var entryRepository repositories.Repository
+	var entryRepository repositories.IRepository
 	container.Resolve(&entryRepository)
 	defer entryRepository.Disconnect()()
 
+	// TODO: fetch from request
 	userId, _ := primitive.ObjectIDFromHex("627106d67b2f25ddd3daf964")
 
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
@@ -111,26 +118,46 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}}
 
 	repoResults := entryRepository.Aggregate([]bson.D{matchStage, sortStage, groupStage, sortSumStage, lookupStage})
+	var categories []CategoryEntriesBundle
+	total := 0
 
-	for repoResult := range repoResults {
+	for _, repoResult := range repoResults {
 		doc, _ := bson.Marshal(repoResult)
 
-		var test EntryCatgegoryBundle
-		bson.Unmarshal(doc, &test)
+		var result AggregateResult
+		bson.Unmarshal(doc, &result)
 
-		fmt.Printf("%+v\n", test)
+		cateEntriesBundle := CategoryEntriesBundle{
+			Id:      result.Category[0].Id,
+			Sum:     result.Sum,
+			Name:    result.Category[0].Name,
+			Color:   result.Category[0].Color,
+			Entries: result.Entries,
+		}
+
+		categories = append(categories, cateEntriesBundle)
+		total += result.Sum
 	}
 
-	resp := events.APIGatewayProxyResponse{
-		StatusCode: 200,
+	for key, category := range categories {
+		percentage := float32(category.Sum) / float32(total)
+		categories[key].Percentage = fmt.Sprintf("%.2f", percentage)
 	}
 
-	return resp, nil
+	resultForReturn := struct {
+		Categories []CategoryEntriesBundle `json:"categories"`
+		Total      int                     `json:"total"`
+	}{
+		Categories: categories,
+		Total:      total,
+	}
+
+	return helpers.GenerateApiResponse(resultForReturn)
 }
 
 func main() {
-	container.Singleton(func() repositories.Repository {
-		return EntryRepository.New()
+	container.Singleton(func() repositories.IRepository {
+		return AhorroRepository.New()
 	})
 
 	lambda.Start(Handler)

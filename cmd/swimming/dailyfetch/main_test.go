@@ -29,17 +29,11 @@ func (m MockEntryModel) Aggregate(stages interface{}) []bson.M {
 		},
 	}
 
-	// var results []any
-
-	// for _, data := range fakeData {
-	// 	results = append(results, data)
-	// }
-
 	return fakeData
 }
 
 func TestHandler(t *testing.T) {
-	container.Singleton(func() repositories.Repository {
+	container.Singleton(func() repositories.IRepository {
 		return MockEntryModel{}
 	})
 	res, err := Handler(context.TODO(), events.APIGatewayProxyRequest{})
