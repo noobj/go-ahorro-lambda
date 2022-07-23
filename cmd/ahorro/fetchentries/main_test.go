@@ -88,3 +88,21 @@ func TestHandlerPass(t *testing.T) {
 		t.Errorf("error %s", err)
 	}
 }
+
+func TestPanicWithNoQueryStringParam(t *testing.T) {
+	expectedRes := "something wrong with time query string"
+
+	defer func() {
+		if r := recover(); r != nil {
+			if r != expectedRes {
+				t.Errorf("\n...expected = %v\n...obtained = %v", expectedRes, r)
+			}
+		}
+	}()
+
+	container.Singleton(func() repositories.IRepository {
+		return MockEntryModel{}
+	})
+
+	Handler(context.TODO(), events.APIGatewayProxyRequest{})
+}
