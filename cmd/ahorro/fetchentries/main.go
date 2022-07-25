@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	container "github.com/golobby/container/v3"
-	"github.com/noobj/swim-crowd-lambda-go/internal/helpers"
+	"github.com/noobj/swim-crowd-lambda-go/internal/helpers/helper"
 	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
 	AhorroRepository "github.com/noobj/swim-crowd-lambda-go/internal/repositories/ahorro"
 	"go.mongodb.org/mongo-driver/bson"
@@ -152,7 +152,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		Total:      total,
 	}
 
-	return helpers.GenerateApiResponse(resultForReturn)
+	return helper.GenerateApiResponse(resultForReturn)
 }
 
 func main() {

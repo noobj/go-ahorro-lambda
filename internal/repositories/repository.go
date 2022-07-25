@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+//go:generate mockgen -source=repository.go -destination mocks/mock_repository.go
 type IRepository interface {
 	Aggregate(interface{}) []bson.M
 	// TODO: use generic for Entry type, not bson
