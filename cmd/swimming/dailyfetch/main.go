@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -15,6 +13,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	container "github.com/golobby/container/v3"
+	"github.com/noobj/swim-crowd-lambda-go/internal/helpers/helper"
 )
 
 const OutputFormat = "2006-01-02 15:04:05"
@@ -95,24 +94,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		results = append(results, result)
 	}
 
-	var buf bytes.Buffer
-
-	body, err := json.Marshal(results)
-	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 404}, err
-	}
-	json.HTMLEscape(&buf, body)
-
-	resp := events.APIGatewayProxyResponse{
-		StatusCode:      200,
-		IsBase64Encoded: false,
-		Body:            buf.String(),
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-	}
-
-	return resp, nil
+	return helper.GenerateApiResponse(results)
 }
 
 func main() {

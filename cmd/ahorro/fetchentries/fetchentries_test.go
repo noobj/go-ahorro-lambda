@@ -79,7 +79,7 @@ var _ = Describe("Fetchentries", func() {
 	})
 
 	Context("when handler return expected json response", func() {
-		It("should return false", func() {
+		It("should pass", func() {
 			expectedRes := "{\"categories\":[{\"_id\":\"62badc82d420270009a51019\",\"sum\":110,\"percentage\":\"0.55\",\"name\":\"Food\",\"entries\":[{\"_id\":\"62badc82d420270009a51019\",\"Amount\":110,\"Date\":\"2022-01-05\",\"Descr\":\"fuck\"}],\"color\":\"#a4e56c\"},{\"_id\":\"62badc82d420270009a51019\",\"sum\":90,\"percentage\":\"0.45\",\"name\":\"Abc\",\"entries\":[{\"_id\":\"62badc82d420270009a51019\",\"Amount\":90,\"Date\":\"2022-01-05\",\"Descr\":\"fuck\"}],\"color\":\"#a4e51c\"}],\"total\":200}"
 			res, err := main.Handler(context.TODO(), fakeRequest)
 
