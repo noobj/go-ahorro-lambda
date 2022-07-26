@@ -21,12 +21,13 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Install mockgen
+    - name: Install tools
       run: |
         go install github.com/golang/mock/mockgen
+        go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
 
     - name: Generate Mocks
       run: go generate -x ./...
 
     - name: Test
-      run: npm test
+      run: ginkgo ./...
