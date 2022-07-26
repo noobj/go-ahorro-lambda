@@ -21,6 +21,10 @@ jobs:
     - name: Build
       run: go build -v ./...
 
+    - name: Install mockgen
+      run: |
+        go install github.com/golang/mock/mockgen
+
     - name: Generate Mocks
       run: go generate -x ./...
 
