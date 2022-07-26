@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/noobj/swim-crowd-lambda-go/internal/middleware"
-	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
-	EntryRepository "github.com/noobj/swim-crowd-lambda-go/internal/repositories/swim/entry"
+	"github.com/noobj/go-serverless-services/internal/middleware"
+	"github.com/noobj/go-serverless-services/internal/repositories"
+	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/swim/entry"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	container "github.com/golobby/container/v3"
-	"github.com/noobj/swim-crowd-lambda-go/internal/helpers/helper"
+	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 )
 
 const OutputFormat = "2006-01-02 15:04:05"

@@ -1,4 +1,4 @@
-service: swim-crowd-lambda-go
+service: go-serverless-services
 plugins:
   - serverless-offline
 frameworkVersion: '3'

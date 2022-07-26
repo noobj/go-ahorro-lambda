@@ -1,4 +1,4 @@
-module github.com/noobj/swim-crowd-lambda-go
+module github.com/noobj/go-serverless-services
 
 go 1.18
 

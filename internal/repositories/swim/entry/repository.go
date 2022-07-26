@@ -1,8 +1,8 @@
 package entry
 
 import (
-	"github.com/noobj/swim-crowd-lambda-go/internal/mongodb"
-	. "github.com/noobj/swim-crowd-lambda-go/internal/repositories"
+	"github.com/noobj/go-serverless-services/internal/mongodb"
+	. "github.com/noobj/go-serverless-services/internal/repositories"
 )
 
 type Entry struct {

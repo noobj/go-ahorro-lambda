@@ -5,7 +5,7 @@
     "scripts": {
         "start": "node ./node_modules/.bin/serverless offline start --useDocker",
         "watch": "nodemon --watch ./ -e go,js --exec make build",
-        "test": "go test -v ./..."
+        "test": "ginkgo ./..."
     },
     "devDependencies": {
         "nodemon": "^2.0.3",

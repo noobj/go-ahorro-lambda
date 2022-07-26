@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	container "github.com/golobby/container/v3"
-	"github.com/noobj/swim-crowd-lambda-go/internal/helpers/helper"
-	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
-	AhorroRepository "github.com/noobj/swim-crowd-lambda-go/internal/repositories/ahorro"
+	"github.com/noobj/go-serverless-services/internal/helpers/helper"
+	"github.com/noobj/go-serverless-services/internal/repositories"
+	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

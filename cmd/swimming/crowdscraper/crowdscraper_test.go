@@ -5,10 +5,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 	container "github.com/golobby/container/v3"
-	main "github.com/noobj/swim-crowd-lambda-go/cmd/swimming/crowdscraper"
-	"github.com/noobj/swim-crowd-lambda-go/cmd/swimming/crowdscraper/matchers"
-	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
-	. "github.com/noobj/swim-crowd-lambda-go/internal/repositories/mocks"
+	main "github.com/noobj/go-serverless-services/cmd/swimming/crowdscraper"
+	"github.com/noobj/go-serverless-services/cmd/swimming/crowdscraper/matchers"
+	"github.com/noobj/go-serverless-services/internal/repositories"
+	. "github.com/noobj/go-serverless-services/internal/repositories/mocks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
