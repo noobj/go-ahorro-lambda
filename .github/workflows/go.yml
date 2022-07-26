@@ -8,6 +8,27 @@ on:
 
 jobs:
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+
+    - name: Install tools
+      run: |
+        go install github.com/golang/mock/mockgen
+        go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
+
+    - name: Generate Mocks
+      run: go generate -x ./...
+
+    - name: Test
+      run: ginkgo ./...
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -20,14 +41,3 @@ jobs:
 
     - name: Build
       run: go build -v ./...
-
-    - name: Install tools
-      run: |
-        go install github.com/golang/mock/mockgen
-        go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
-
-    - name: Generate Mocks
-      run: go generate -x ./...
-
-    - name: Test
-      run: ginkgo ./...

@@ -1,12 +1,9 @@
 package ahorro
 
 import (
-	"context"
-
 	"github.com/noobj/swim-crowd-lambda-go/internal/mongodb"
-	"github.com/noobj/swim-crowd-lambda-go/internal/repositories"
+	. "github.com/noobj/swim-crowd-lambda-go/internal/repositories"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,41 +22,19 @@ type Category struct {
 	V     int `bson:"__v"`
 }
 
-type AhorroRepository repositories.BaseRepository
+type AhorroRepository struct {
+	AbstractRepository
+}
 
 func New() *AhorroRepository {
-	return &AhorroRepository{
-		Client:     mongodb.GetInstance(),
-		Collection: mongodb.GetInstance().Database("ahorro").Collection("entries"),
+	abstractRepository := AbstractRepository{
+		BaseRepository: BaseRepository{
+			Client:     mongodb.GetInstance(),
+			Collection: mongodb.GetInstance().Database("ahorro").Collection("entries"),
+		},
 	}
-}
+	repo := AhorroRepository{AbstractRepository: abstractRepository}
+	repo.IRepository = abstractRepository
 
-func (m AhorroRepository) Disconnect() func() {
-	return func() {
-		if err := m.Client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}
-}
-
-func (m AhorroRepository) InsertOne(doc bson.D) {
-	_, err := m.Collection.InsertOne(context.TODO(), doc)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (m AhorroRepository) Aggregate(stages interface{}) []bson.M {
-	cursor, err := m.Collection.Aggregate(context.TODO(), stages)
-	if err != nil {
-		panic(err)
-	}
-
-	var results []bson.M
-
-	if err = cursor.All(context.TODO(), &results); err != nil {
-		panic(err)
-	}
-
-	return results
+	return &repo
 }
