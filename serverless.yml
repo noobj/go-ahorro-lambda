@@ -33,5 +33,11 @@ functions:
     handler: bin/fetchentries
     events:
       - httpApi:
-          path: /ahorro/entry
+          path: /entries
           method: get
+  login:
+    handler: bin/login
+    events:
+      - httpApi:
+          path: /auth/login
+          method: post

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/golang-jwt/jwt"
+	"github.com/noobj/go-serverless-services/internal/types"
 )
 
 func GenerateApiResponse(resultForBody interface{}) (events.APIGatewayProxyResponse, error) {
@@ -25,4 +27,21 @@ func GenerateApiResponse(resultForBody interface{}) (events.APIGatewayProxyRespo
 	}
 
 	return resp, nil
+}
+
+func GenerateInternalErrorResponse() (events.APIGatewayProxyResponse, error) {
+	return events.APIGatewayProxyResponse{Body: "internal error", StatusCode: 500}, nil
+}
+
+func GenerateJwtToken(payload interface{}, expiredTime int, secret string) (string, error) {
+	claims := types.MyCustomClaims{
+		Payload: payload,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: int64(expiredTime),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	return token.SignedString([]byte(secret))
 }

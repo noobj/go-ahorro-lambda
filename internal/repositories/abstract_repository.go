@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
+	. "go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type AbstractRepository struct {
@@ -39,4 +41,8 @@ func (repo AbstractRepository) Aggregate(stages interface{}) []bson.M {
 	}
 
 	return results
+}
+
+func (repo AbstractRepository) FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *SingleResult {
+	return repo.Collection.FindOne(ctx, filter, opts...)
 }
