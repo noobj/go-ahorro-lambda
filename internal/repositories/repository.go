@@ -12,7 +12,7 @@ import (
 type IRepository interface {
 	Aggregate(interface{}) []bson.M
 	// TODO: use generic for Entry type, not bson
-	InsertOne(bson.D)
+	InsertOne(interface{})
 	Disconnect() func()
 	FindOne(context.Context, interface{}, ...*options.FindOneOptions) *mongo.SingleResult
 }

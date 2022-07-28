@@ -3,9 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
-	"os"
-	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -13,6 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	"github.com/noobj/go-serverless-services/internal/repositories"
+	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
@@ -52,20 +52,27 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return helper.GenerateInternalErrorResponse()
 	}
 
-	accessTokenExpireTime, err := strconv.Atoi(os.Getenv("ACCESS_TOKEN_EXPIRATION_TIME"))
-	accessTokenSecret := os.Getenv("ACCESS_TOKEN_SECRET")
-
-	if err != nil {
-		log.Println("ENV ACCESS_TOKEN_EXPIRATION_TIME format wrong")
-		return helper.GenerateInternalErrorResponse()
-	}
-
-	token, err := helper.GenerateJwtToken(user.Id.Hex(), accessTokenExpireTime, accessTokenSecret)
+	token, err := helper.GenerateAccessToken(user.Id.Hex())
 	if err != nil {
 		log.Println("Couldn't generate access token", err)
 		return helper.GenerateInternalErrorResponse()
 	}
-	// TODO: generate refresh tokens
+
+	refreshToken, err := helper.GenerateRefreshToken(user.Id.Hex())
+	if err != nil {
+		log.Println("Couldn't generate refresh token", err)
+		return helper.GenerateInternalErrorResponse()
+	}
+
+	fmt.Println(refreshToken)
+
+	loginInfo := LoginInfoRepository.LoginInfo{
+		User:         user.Id,
+		RefreshToken: refreshToken,
+	}
+	loginInfoRepository := LoginInfoRepository.New()
+	loginInfoRepository.InsertOne(loginInfo)
+
 	// TODO: insert refresh token into LoginInfo
 	// TODO: set up response cookies
 

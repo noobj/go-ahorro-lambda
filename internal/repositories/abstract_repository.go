@@ -13,7 +13,7 @@ type AbstractRepository struct {
 	IRepository
 }
 
-func (repo AbstractRepository) InsertOne(doc bson.D) {
+func (repo AbstractRepository) InsertOne(doc interface{}) {
 	_, err := repo.Collection.InsertOne(context.TODO(), doc)
 	if err != nil {
 		panic(err)
