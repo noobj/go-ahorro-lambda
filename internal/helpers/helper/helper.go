@@ -24,6 +24,7 @@ func GenerateApiResponse(resultForBody interface{}) (events.APIGatewayProxyRespo
 		IsBase64Encoded: false,
 		Body:            buf.String(),
 		Headers: map[string]string{
+			"set-cookie":   "xxx=123",
 			"Content-Type": "application/json",
 		},
 	}

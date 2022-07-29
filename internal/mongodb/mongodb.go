@@ -21,7 +21,6 @@ func GetInstance() *mongo.Client {
 	if clientInstance == nil {
 		once.Do(
 			func() {
-
 				if err := godotenv.Load(); err != nil {
 					log.Println("No .env file found")
 				}
@@ -45,8 +44,6 @@ func GetInstance() *mongo.Client {
 				fmt.Println("Creating single instance now.")
 				clientInstance = client
 			})
-	} else {
-		fmt.Println("Single instance already created.")
 	}
 
 	return clientInstance
