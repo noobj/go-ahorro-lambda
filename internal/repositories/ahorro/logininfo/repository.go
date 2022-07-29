@@ -10,7 +10,7 @@ type LoginInfo struct {
 	Id           primitive.ObjectID `json:"_id" bson:"_id,omitempty"`
 	User         primitive.ObjectID
 	RefreshToken string
-	CreatedAt    primitive.Timestamp `bson:"createdAt"`
+	CreatedAt    primitive.DateTime `bson:"createdAt"`
 }
 
 type LoginInfoRepository struct {

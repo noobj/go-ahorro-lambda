@@ -3,6 +3,7 @@ package helper
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -77,4 +78,8 @@ func GenerateRefreshToken(userId string) (string, error) {
 	}
 
 	return token, nil
+}
+
+func SetCookie(cookie http.Cookie, reps *events.APIGatewayProxyResponse) {
+	reps.MultiValueHeaders["set-cookie"] = append(reps.MultiValueHeaders["set-cookie"], cookie.String())
 }
