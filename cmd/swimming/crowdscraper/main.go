@@ -37,7 +37,6 @@ func Handler(ctx context.Context) (events.APIGatewayProxyResponse, error) {
 
 	var entryRepository repositories.IRepository
 	container.Resolve(&entryRepository)
-	defer entryRepository.Disconnect()()
 
 	doc := bson.D{{Key: "amount", Value: crowdCounts[2]}, {Key: "time", Value: time.Now().Format("2006-01-02 15:04")}}
 	entryRepository.InsertOne(doc)
@@ -52,9 +51,12 @@ func Handler(ctx context.Context) (events.APIGatewayProxyResponse, error) {
 }
 
 func main() {
+	entryRepo := EntryRepository.New()
 	container.Singleton(func() repositories.IRepository {
-		return EntryRepository.New()
+		return entryRepo
 	})
+
+	defer entryRepo.Disconnect()()
 
 	lambda.Start(Handler)
 }

@@ -52,7 +52,6 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	var entryRepository repositories.IRepository
 	container.Resolve(&entryRepository)
-	defer entryRepository.Disconnect()()
 
 	matchStage := bson.M{"$match": bson.M{
 		"$and": bson.A{
@@ -98,9 +97,12 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 }
 
 func main() {
+	entryRepo := EntryRepository.New()
+
 	container.Singleton(func() repositories.IRepository {
-		return EntryRepository.New()
+		return entryRepo
 	})
+	defer entryRepo.Disconnect()()
 
 	lambda.Start(middleware.Logging(Handler))
 }

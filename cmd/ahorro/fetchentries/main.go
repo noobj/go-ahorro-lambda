@@ -67,7 +67,6 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	// }
 	var entryRepository repositories.IRepository
 	container.Resolve(&entryRepository)
-	defer entryRepository.Disconnect()()
 
 	// TODO: fetch from request
 	userId, _ := primitive.ObjectIDFromHex("627106d67b2f25ddd3daf964")
@@ -156,8 +155,11 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 }
 
 func main() {
+	entryRepo := AhorroRepository.New()
+	defer entryRepo.Disconnect()()
+
 	container.Singleton(func() repositories.IRepository {
-		return AhorroRepository.New()
+		return entryRepo
 	})
 
 	lambda.Start(Handler)
