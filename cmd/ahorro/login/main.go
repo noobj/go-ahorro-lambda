@@ -53,13 +53,13 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	var user UserRepository.User
 	err = userRepository.FindOne(context.TODO(), bson.M{"account": requestBody.Account}).Decode(&user)
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
 		return events.APIGatewayProxyResponse{Body: "Couldn't find the user", StatusCode: 404}, nil
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestBody.Password))
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
 		return events.APIGatewayProxyResponse{Body: "account and password not match", StatusCode: 404}, nil
 	}
 
