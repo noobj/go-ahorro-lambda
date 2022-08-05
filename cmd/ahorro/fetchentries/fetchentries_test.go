@@ -86,11 +86,12 @@ var _ = Describe("Fetchentries", func() {
 			Expect(res.Body).To(Equal(expectedRes))
 			Expect(err).To(BeNil())
 		})
-	})
 
-	Context("when handler will panic", func() {
 		It("should panic for wrong query string format", func() {
-			Expect(func() { main.Handler(context.TODO(), events.APIGatewayProxyRequest{}) }).Should(PanicWith("something wrong with time query string"))
+			res, err := main.Handler(context.TODO(), events.APIGatewayProxyRequest{})
+			Expect(res.Body).To(Equal("request query error"))
+			Expect(res.StatusCode).To(Equal(400))
+			Expect(err).To(BeNil())
 		})
 	})
 })

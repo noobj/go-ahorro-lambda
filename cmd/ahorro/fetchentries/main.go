@@ -45,7 +45,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	sortByDateInput, sortExist := request.QueryStringParameters["entriesSortByDate"]
 
 	if !checkTimeFormat("2006-01-02", startFromQuery) || !checkTimeFormat("2006-01-02", endFromQuery) || !startExist || !endExist {
-		panic("something wrong with time query string")
+		return events.APIGatewayProxyResponse{Body: "request query error", StatusCode: 400}, nil
 	}
 
 	var sortColumn string

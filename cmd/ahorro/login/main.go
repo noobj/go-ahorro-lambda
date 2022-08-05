@@ -42,19 +42,18 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	var userRepository repositories.IRepository
 	var requestBody LoginDto
 
-	err := json.Unmarshal([]byte(request.Body), &requestBody)
-
-	if err != nil {
-		return events.APIGatewayProxyResponse{Body: "request body error", StatusCode: 404}, nil
+	json.Unmarshal([]byte(request.Body), &requestBody)
+	if requestBody.Account == "" {
+		return events.APIGatewayProxyResponse{Body: "request body error", StatusCode: 400}, nil
 	}
 
 	container.NamedResolve(&userRepository, "UserRepo")
 
 	var user UserRepository.User
-	err = userRepository.FindOne(context.TODO(), bson.M{"account": requestBody.Account}).Decode(&user)
+	err := userRepository.FindOne(context.TODO(), bson.M{"account": requestBody.Account}).Decode(&user)
 	if err != nil {
 		log.Println(err)
-		return events.APIGatewayProxyResponse{Body: "Couldn't find the user", StatusCode: 404}, nil
+		return events.APIGatewayProxyResponse{Body: "couldn't find the user", StatusCode: 404}, nil
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestBody.Password))

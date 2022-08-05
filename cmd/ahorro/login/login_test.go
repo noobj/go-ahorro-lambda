@@ -3,7 +3,6 @@ package main_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -64,20 +63,23 @@ var _ = Describe("Login", func() {
 		})
 	})
 
-	Context("when handler return expected json response", func() {
-		It("login should failed", func() {
-			var fakeUser = main.LoginDto{
-				Account:  "jjj",
-				Password: "12342",
+	DescribeTable("Login should failed",
+		func(userName string, password string, body string, statusCode int) {
+			fakeRequest = events.APIGatewayProxyRequest{}
+			if userName != "" {
+				var fakeUser = main.LoginDto{
+					Account:  userName,
+					Password: password,
+				}
+				var fakeUserJson, _ = json.Marshal(fakeUser)
+				fakeRequest.Body = string(fakeUserJson)
 			}
-			var fakeUserJson, _ = json.Marshal(fakeUser)
-			fakeRequest.Body = string(fakeUserJson)
 			res, err := main.Handler(context.TODO(), fakeRequest)
-
-			fmt.Printf("%+v", res)
 			Expect(err).To(BeNil())
-			Expect(res.StatusCode).To(Equal(404))
-			Expect(res.Body).Should(ContainSubstring("account and password not match"))
-		})
-	})
+			Expect(res.StatusCode).To(Equal(statusCode))
+			Expect(res.Body).Should(Equal(body))
+		},
+		Entry("When wrong password", "jjj", "12342", "account and password not match", 404),
+		Entry("When no user found", "", "", "request body error", 400),
+	)
 })
