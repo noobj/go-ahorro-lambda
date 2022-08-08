@@ -97,16 +97,17 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		Name:     "access_token",
 		Value:    token,
 		HttpOnly: true,
-		Secure:   true,
-		Expires:  time.Now().Add(time.Second * time.Duration(accessTokenExpireTime)),
+		// Secure:   true,
+		Expires: time.Now().Add(time.Second * time.Duration(accessTokenExpireTime)),
+		Path:    "/",
 	}
 	cookieWithRefreshTkn := http.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshToken,
 		HttpOnly: true,
-		Secure:   true,
-		Expires:  time.Now().Add(time.Second * time.Duration(refreshTokenExpireTime)),
-		Path:     "/auth",
+		// Secure:   true,
+		Expires: time.Now().Add(time.Second * time.Duration(refreshTokenExpireTime)),
+		Path:    "/auth",
 	}
 	helper.SetCookie(cookieWithAccessTkn, &resp)
 	helper.SetCookie(cookieWithRefreshTkn, &resp)

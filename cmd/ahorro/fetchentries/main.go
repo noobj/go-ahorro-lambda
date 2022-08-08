@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	container "github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
+	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
 	"go.mongodb.org/mongo-driver/bson"
@@ -38,7 +39,7 @@ func checkTimeFormat(format string, timeString string) bool {
 	return err == nil
 }
 
-func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	startFromQuery, startExist := request.QueryStringParameters["timeStart"]
 	endFromQuery, endExist := request.QueryStringParameters["timeEnd"]
 	// categoriesExcludeInput, cateExcludeExist := request.QueryStringParameters["categoriesExclude"]
@@ -162,5 +163,5 @@ func main() {
 		return entryRepo
 	})
 
-	lambda.Start(Handler)
+	lambda.Start(jwtMiddleWare.Auth(Handler))
 }

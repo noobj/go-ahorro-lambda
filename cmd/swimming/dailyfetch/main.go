@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/noobj/go-serverless-services/internal/middleware"
+	middleware "github.com/noobj/go-serverless-services/internal/middleware/logging"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/swim/entry"
 	"go.mongodb.org/mongo-driver/bson"

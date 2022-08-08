@@ -61,7 +61,7 @@ var fakeData = []bson.M{
 }
 
 var _ = Describe("Fetchentries", func() {
-	var fakeRequest events.APIGatewayProxyRequest
+	var fakeRequest events.APIGatewayV2HTTPRequest
 
 	BeforeEach(func() {
 		ctrl := gomock.NewController(GinkgoT())
@@ -88,7 +88,7 @@ var _ = Describe("Fetchentries", func() {
 		})
 
 		It("should panic for wrong query string format", func() {
-			res, err := main.Handler(context.TODO(), events.APIGatewayProxyRequest{})
+			res, err := main.Handler(context.TODO(), events.APIGatewayV2HTTPRequest{})
 			Expect(res.Body).To(Equal("request query error"))
 			Expect(res.StatusCode).To(Equal(400))
 			Expect(err).To(BeNil())
