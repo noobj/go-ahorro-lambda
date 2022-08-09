@@ -6,11 +6,18 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/golang-jwt/jwt"
+	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"github.com/noobj/go-serverless-services/internal/types"
 )
+
+type APIGatewayV2HTTPRequestWithUser struct {
+	events.APIGatewayV2HTTPRequest
+	UserRepository.User
+}
 
 func GenerateApiResponse(resultForBody interface{}) (events.APIGatewayProxyResponse, error) {
 	var buf bytes.Buffer
@@ -38,10 +45,11 @@ func GenerateInternalErrorResponse() (events.APIGatewayProxyResponse, error) {
 }
 
 func GenerateJwtToken(payload interface{}, expiredTime int, secret string) (string, error) {
+	expiresAt := time.Now().Add(time.Duration(expiredTime) * time.Second).Unix()
 	claims := types.MyCustomClaims{
 		Payload: payload,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: int64(expiredTime),
+			ExpiresAt: expiresAt,
 		},
 	}
 

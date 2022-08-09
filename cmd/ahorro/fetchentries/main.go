@@ -12,6 +12,7 @@ import (
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
+	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -39,7 +40,7 @@ func checkTimeFormat(format string, timeString string) bool {
 	return err == nil
 }
 
-func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+func Handler(ctx context.Context, request helper.APIGatewayV2HTTPRequestWithUser) (events.APIGatewayProxyResponse, error) {
 	startFromQuery, startExist := request.QueryStringParameters["timeStart"]
 	endFromQuery, endExist := request.QueryStringParameters["timeEnd"]
 	// categoriesExcludeInput, cateExcludeExist := request.QueryStringParameters["categoriesExclude"]
@@ -70,8 +71,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	container.Resolve(&entryRepository)
 
 	// TODO: fetch from request
-	userId, _ := primitive.ObjectIDFromHex("627106d67b2f25ddd3daf964")
-
+	userId := request.User.Id
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
 		{Key: "$expr", Value: bson.D{
 			{Key: "$and", Value: bson.A{
@@ -161,6 +161,9 @@ func main() {
 
 	container.Singleton(func() repositories.IRepository {
 		return entryRepo
+	})
+	container.NamedSingleton("UserRepo", func() repositories.IRepository {
+		return UserRepository.New()
 	})
 
 	lambda.Start(jwtMiddleWare.Auth(Handler))

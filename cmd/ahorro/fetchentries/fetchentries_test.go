@@ -3,10 +3,10 @@ package main_test
 import (
 	"context"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/golang/mock/gomock"
 	container "github.com/golobby/container/v3"
 	main "github.com/noobj/go-serverless-services/cmd/ahorro/fetchentries"
+	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	. "github.com/noobj/go-serverless-services/internal/repositories/mocks"
 	. "github.com/onsi/ginkgo/v2"
@@ -61,7 +61,7 @@ var fakeData = []bson.M{
 }
 
 var _ = Describe("Fetchentries", func() {
-	var fakeRequest events.APIGatewayV2HTTPRequest
+	var fakeRequest helper.APIGatewayV2HTTPRequestWithUser
 
 	BeforeEach(func() {
 		ctrl := gomock.NewController(GinkgoT())
@@ -88,7 +88,7 @@ var _ = Describe("Fetchentries", func() {
 		})
 
 		It("should panic for wrong query string format", func() {
-			res, err := main.Handler(context.TODO(), events.APIGatewayV2HTTPRequest{})
+			res, err := main.Handler(context.TODO(), helper.APIGatewayV2HTTPRequestWithUser{})
 			Expect(res.Body).To(Equal("request query error"))
 			Expect(res.StatusCode).To(Equal(400))
 			Expect(err).To(BeNil())
