@@ -10,14 +10,8 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/golang-jwt/jwt"
-	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"github.com/noobj/go-serverless-services/internal/types"
 )
-
-type APIGatewayV2HTTPRequestWithUser struct {
-	events.APIGatewayV2HTTPRequest
-	UserRepository.User
-}
 
 func GenerateApiResponse(resultForBody interface{}) (events.APIGatewayProxyResponse, error) {
 	var buf bytes.Buffer

@@ -4,11 +4,10 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 )
 
 type ApiRequest interface {
-	events.APIGatewayProxyRequest | helper.APIGatewayV2HTTPRequestWithUser
+	events.APIGatewayProxyRequest | events.APIGatewayV2HTTPRequest
 }
 
 // HandlerFunc is a generic JSON Lambda handler used to chain middleware.

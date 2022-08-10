@@ -40,7 +40,7 @@ func checkTimeFormat(format string, timeString string) bool {
 	return err == nil
 }
 
-func Handler(ctx context.Context, request helper.APIGatewayV2HTTPRequestWithUser) (events.APIGatewayProxyResponse, error) {
+func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	startFromQuery, startExist := request.QueryStringParameters["timeStart"]
 	endFromQuery, endExist := request.QueryStringParameters["timeEnd"]
 	// categoriesExcludeInput, cateExcludeExist := request.QueryStringParameters["categoriesExclude"]
@@ -70,12 +70,15 @@ func Handler(ctx context.Context, request helper.APIGatewayV2HTTPRequestWithUser
 	var entryRepository repositories.IRepository
 	container.Resolve(&entryRepository)
 
-	// TODO: fetch from request
-	userId := request.User.Id
+	user, ok := helper.GetUserFromContext(ctx)
+	if !ok {
+		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
+	}
+
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
 		{Key: "$expr", Value: bson.D{
 			{Key: "$and", Value: bson.A{
-				bson.D{{Key: "$eq", Value: bson.A{"$user", userId}}},
+				bson.D{{Key: "$eq", Value: bson.A{"$user", user.Id}}},
 				bson.D{{Key: "$gte", Value: bson.A{"$date", startFromQuery}}},
 				bson.D{{Key: "$lte", Value: bson.A{"$date", endFromQuery}}},
 				//TODO: how do I spread the slice?

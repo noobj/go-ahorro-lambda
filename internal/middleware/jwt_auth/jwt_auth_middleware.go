@@ -21,27 +21,27 @@ import (
 
 func Auth[T middleware.ApiRequest](f middleware.HandlerFunc[T]) middleware.HandlerFunc[T] {
 	return func(ctx context.Context, r T) (events.APIGatewayProxyResponse, error) {
-		v2Request, ok := any(r).(helper.APIGatewayV2HTTPRequestWithUser)
+		v2Request, ok := any(r).(events.APIGatewayV2HTTPRequest)
 		if !ok {
-			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 404}, nil
+			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 		}
 		cookiesMap := parseCookie(v2Request.Cookies)
 		if _, ok := cookiesMap["access_token"]; !ok {
-			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 404}, nil
+			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 		}
 
 		payload, err := extractPayloadFromToken(cookiesMap["access_token"])
 		if err != nil {
-			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 404}, nil
+			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 		}
 		user, err := getUserForPayload(payload)
 		if err != nil {
-			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 404}, nil
+			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 		}
 
-		v2Request.User = *user
+		ctxWithUser := context.WithValue(ctx, helper.ContextKeyUser, *user)
 
-		return f(ctx, any(v2Request).(T))
+		return f(ctxWithUser, any(v2Request).(T))
 	}
 }
 
