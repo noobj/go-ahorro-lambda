@@ -1,9 +1,6 @@
 package helper
 
 import (
-	"bytes"
-	"encoding/json"
-	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -12,27 +9,6 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/noobj/go-serverless-services/internal/types"
 )
-
-func GenerateApiResponse(resultForBody interface{}) (events.APIGatewayProxyResponse, error) {
-	var buf bytes.Buffer
-	body, err := json.Marshal(resultForBody)
-	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 404}, err
-	}
-	json.HTMLEscape(&buf, body)
-
-	resp := events.APIGatewayProxyResponse{
-		StatusCode:      200,
-		IsBase64Encoded: false,
-		Body:            buf.String(),
-		Headers: map[string]string{
-			"set-cookie":   "xxx=123",
-			"Content-Type": "application/json",
-		},
-	}
-
-	return resp, nil
-}
 
 func GenerateInternalErrorResponse() (events.APIGatewayProxyResponse, error) {
 	return events.APIGatewayProxyResponse{Body: "internal error", StatusCode: 500}, nil
@@ -80,8 +56,4 @@ func GenerateRefreshToken(userId string) (string, error) {
 	}
 
 	return token, nil
-}
-
-func SetCookie(cookie http.Cookie, reps *events.APIGatewayProxyResponse) {
-	reps.MultiValueHeaders["set-cookie"] = append(reps.MultiValueHeaders["set-cookie"], cookie.String())
 }

@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -42,7 +42,13 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	var userRepository repositories.IRepository
 	var requestBody LoginDto
 
-	json.Unmarshal([]byte(request.Body), &requestBody)
+	formData, err := helper.ParseMultipartForm(request.Headers["content-type"], strings.NewReader(request.Body))
+	if err != nil {
+		return events.APIGatewayProxyResponse{Body: "request body error", StatusCode: 400}, nil
+	}
+
+	requestBody.Account = formData.Value["account"][0]
+	requestBody.Password = formData.Value["password"][0]
 	if requestBody.Account == "" {
 		return events.APIGatewayProxyResponse{Body: "request body error", StatusCode: 400}, nil
 	}
@@ -50,7 +56,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	container.NamedResolve(&userRepository, "UserRepo")
 
 	var user UserRepository.User
-	err := userRepository.FindOne(context.TODO(), bson.M{"account": requestBody.Account}).Decode(&user)
+	err = userRepository.FindOne(context.TODO(), bson.M{"account": requestBody.Account}).Decode(&user)
 	if err != nil {
 		log.Println(err)
 		return events.APIGatewayProxyResponse{Body: "couldn't find the user", StatusCode: 404}, nil

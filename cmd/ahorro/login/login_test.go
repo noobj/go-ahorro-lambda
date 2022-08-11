@@ -1,8 +1,9 @@
 package main_test
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
+	"mime/multipart"
 	"os"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -27,6 +28,10 @@ var _ = Describe("Login", func() {
 	var fakeRequest events.APIGatewayProxyRequest
 
 	BeforeEach(func() {
+		fakeRequest = events.APIGatewayProxyRequest{
+			Headers: make(map[string]string),
+		}
+
 		ctrl := gomock.NewController(GinkgoT())
 		m := mocks.NewMockIRepository(ctrl)
 
@@ -48,12 +53,14 @@ var _ = Describe("Login", func() {
 
 	Context("when handler return expected json response", func() {
 		It("login should pass", func() {
-			var fakeUser = main.LoginDto{
-				Account:  "jjj",
-				Password: "1234",
-			}
-			var fakeUserJson, _ = json.Marshal(fakeUser)
-			fakeRequest.Body = string(fakeUserJson)
+			var buf bytes.Buffer
+			mw := multipart.NewWriter(&buf)
+			fakeRequest.Headers["content-type"] = mw.FormDataContentType()
+			mw.WriteField("account", "jjj")
+			mw.WriteField("password", "1234")
+			mw.Close()
+			fakeRequest.Body = buf.String()
+
 			res, err := main.Handler(context.TODO(), fakeRequest)
 
 			header := res.MultiValueHeaders
@@ -65,15 +72,14 @@ var _ = Describe("Login", func() {
 
 	DescribeTable("Login should failed",
 		func(userName string, password string, body string, statusCode int) {
-			fakeRequest = events.APIGatewayProxyRequest{}
-			if userName != "" {
-				var fakeUser = main.LoginDto{
-					Account:  userName,
-					Password: password,
-				}
-				var fakeUserJson, _ = json.Marshal(fakeUser)
-				fakeRequest.Body = string(fakeUserJson)
-			}
+			var buf bytes.Buffer
+			mw := multipart.NewWriter(&buf)
+			fakeRequest.Headers["content-type"] = mw.FormDataContentType()
+			mw.WriteField("account", userName)
+			mw.WriteField("password", password)
+			mw.Close()
+			fakeRequest.Body = buf.String()
+
 			res, err := main.Handler(context.TODO(), fakeRequest)
 			Expect(err).To(BeNil())
 			Expect(res.StatusCode).To(Equal(statusCode))

@@ -3,13 +3,13 @@
     "description": "To run the golanf lambda service locally",
     "version": "1.0.0",
     "scripts": {
-        "start": "node ./node_modules/.bin/serverless offline --host 0.0.0.0 start --useDocker",
+        "start": "node ./node_modules/.bin/serverless offline --httpsProtocol ./ssl --host 0.0.0.0 start --useDocker",
         "watch": "nodemon --watch ./ -e go,js --exec make build",
         "test": "ginkgo ./..."
     },
     "devDependencies": {
         "nodemon": "^2.0.19",
         "serverless": "^3.21.0",
-        "serverless-offline": "^9.1.3"
+        "serverless-offline": "^9.1.6"
     }
 }
