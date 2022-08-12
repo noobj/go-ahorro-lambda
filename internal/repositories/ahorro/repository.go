@@ -9,9 +9,9 @@ import (
 
 type Entry struct {
 	Id     primitive.ObjectID `json:"_id" bson:"_id"`
-	Amount int
-	Date   string
-	Descr  string
+	Amount int                `json:"amount"`
+	Date   string             `json:"date"`
+	Descr  string             `json:"descr"`
 }
 
 type Category struct {
