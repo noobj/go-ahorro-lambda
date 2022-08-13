@@ -85,7 +85,7 @@ var _ = Describe("Login", func() {
 			Expect(res.StatusCode).To(Equal(statusCode))
 			Expect(res.Body).Should(Equal(body))
 		},
-		Entry("When wrong password", "jjj", "12342", "account and password not match", 404),
+		Entry("When wrong password", "jjj", "12342", "account and password not match", 401),
 		Entry("When no user found", "", "", "request body error", 400),
 	)
 })

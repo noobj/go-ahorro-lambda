@@ -29,6 +29,16 @@ jobs:
     - name: Test
       run: ginkgo ./...
 
+    - name: send telegram message on push
+      if: failure()
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          Commit message: ${{ github.event.commits[0].message }}
+
   build:
     runs-on: ubuntu-latest
     steps:
