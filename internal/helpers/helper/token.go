@@ -5,14 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/golang-jwt/jwt"
 	"github.com/noobj/go-serverless-services/internal/types"
 )
-
-func GenerateInternalErrorResponse() (events.APIGatewayProxyResponse, error) {
-	return events.APIGatewayProxyResponse{Body: "internal error", StatusCode: 500}, nil
-}
 
 func GenerateJwtToken(payload interface{}, expiredTime int, secret string) (string, error) {
 	expiresAt := time.Now().Add(time.Duration(expiredTime) * time.Second).Unix()

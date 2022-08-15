@@ -3,6 +3,7 @@ package helper
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"mime"
@@ -11,6 +12,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/golang-jwt/jwt"
+	"github.com/noobj/go-serverless-services/internal/types"
 )
 
 func GenerateApiResponse(resultForBody interface{}) (events.APIGatewayProxyResponse, error) {
@@ -56,4 +59,45 @@ func ParseMultipartForm(contentType string, body io.Reader) (*multipart.Form, er
 	}
 
 	return formData, nil
+}
+
+func ParseCookie(cookies []string) map[string]string {
+	result := make(map[string]string)
+	for _, cookie := range cookies {
+		splitStrings := strings.SplitN(cookie, "=", 2)
+		if len(splitStrings) != 2 {
+			continue
+		}
+
+		result[splitStrings[0]] = splitStrings[1]
+	}
+
+	return result
+}
+
+func ExtractPayloadFromToken(key string, jwtToken string) (interface{}, error) {
+	var claims types.MyCustomClaims
+	token, err := jwt.ParseWithClaims(jwtToken, &claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(key), nil
+	})
+	if err != nil {
+		log.Printf("jwt parse error: %v", err)
+		return nil, err
+	}
+	if !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	return claims.Payload, nil
+}
+
+func GenerateInternalErrorResponse() (events.APIGatewayProxyResponse, error) {
+	return events.APIGatewayProxyResponse{Body: "internal error", StatusCode: 500}, nil
+}
+
+func GenerateAuthErrorResponse() (events.APIGatewayProxyResponse, error) {
+	return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 }

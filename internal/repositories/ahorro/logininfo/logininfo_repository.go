@@ -9,7 +9,7 @@ import (
 type LoginInfo struct {
 	Id           primitive.ObjectID `json:"_id" bson:"_id,omitempty"`
 	User         primitive.ObjectID
-	RefreshToken string
+	RefreshToken string             `bson:"refreshToken"`
 	CreatedAt    primitive.DateTime `bson:"createdAt"`
 }
 

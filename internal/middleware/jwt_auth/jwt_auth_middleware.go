@@ -5,16 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/golang-jwt/jwt"
 	container "github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	"github.com/noobj/go-serverless-services/internal/middleware"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
-	"github.com/noobj/go-serverless-services/internal/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -25,12 +22,13 @@ func Auth[T middleware.ApiRequest](f middleware.HandlerFunc[T]) middleware.Handl
 		if !ok {
 			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 		}
-		cookiesMap := parseCookie(v2Request.Cookies)
+		cookiesMap := helper.ParseCookie(v2Request.Cookies)
 		if _, ok := cookiesMap["access_token"]; !ok {
 			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 		}
 
-		payload, err := extractPayloadFromToken(cookiesMap["access_token"])
+		key := os.Getenv("ACCESS_TOKEN_SECRET")
+		payload, err := helper.ExtractPayloadFromToken(key, cookiesMap["access_token"])
 		if err != nil {
 			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 		}
@@ -63,38 +61,4 @@ func getUserForPayload(payload interface{}) (*UserRepository.User, error) {
 	}
 
 	return &user, nil
-}
-
-func extractPayloadFromToken(jwtToken string) (interface{}, error) {
-	key := os.Getenv("ACCESS_TOKEN_SECRET")
-	var claims types.MyCustomClaims
-	token, err := jwt.ParseWithClaims(jwtToken, &claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(key), nil
-	})
-	if err != nil {
-		log.Printf("jwt parse error: %v", err)
-		return nil, err
-	}
-	if !token.Valid {
-		return nil, fmt.Errorf("invalid token")
-	}
-
-	return claims.Payload, nil
-}
-
-func parseCookie(cookies []string) map[string]string {
-	result := make(map[string]string)
-	for _, cookie := range cookies {
-		splitStrings := strings.SplitN(cookie, "=", 2)
-		if len(splitStrings) != 2 {
-			continue
-		}
-
-		result[splitStrings[0]] = splitStrings[1]
-	}
-
-	return result
 }
