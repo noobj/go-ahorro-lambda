@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/gocolly/colly"
-	container "github.com/golobby/container/v3"
+	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/swim/entry"
 	"go.mongodb.org/mongo-driver/bson"

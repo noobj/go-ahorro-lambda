@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/golang/mock/gomock"
-	container "github.com/golobby/container/v3"
+	"github.com/golobby/container/v3"
 	main "github.com/noobj/go-serverless-services/cmd/ahorro/fetchentries"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	"github.com/noobj/go-serverless-services/internal/repositories"

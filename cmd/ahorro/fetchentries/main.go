@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	container "github.com/golobby/container/v3"
+	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/repositories"

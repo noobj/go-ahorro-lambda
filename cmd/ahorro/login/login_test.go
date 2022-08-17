@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/golang/mock/gomock"
-	container "github.com/golobby/container/v3"
+	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	mocks "github.com/noobj/go-serverless-services/internal/repositories/mocks"
 )
