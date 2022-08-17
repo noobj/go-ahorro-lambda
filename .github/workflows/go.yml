@@ -27,7 +27,15 @@ jobs:
       run: go generate -x ./...
 
     - name: Test
-      run: ginkgo ./...
+      run: ginkgo --cover ./...
+
+    - name: Install goveralls
+      run: go install github.com/mattn/goveralls@latest
+
+    - name: Send coverage
+      env:
+        COVERALLS_TOKEN: ${{ secrets.COVERALLS }}
+      run: goveralls -coverprofile=coverprofile.out
 
     - name: send telegram message when failed
       if: failure()

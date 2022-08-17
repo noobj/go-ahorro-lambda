@@ -1,5 +1,5 @@
 # Go-Serverless
-![GitHub](https://img.shields.io/github/workflow/status/noobj/go-serverless-services-integration/Go?style=plastic)  ![GitHub](https://img.shields.io/github/license/noobj/go-serverless-services-integration?color=blue&style=plastic)
+![GitHub](https://img.shields.io/github/workflow/status/noobj/go-serverless-services-integration/Go?style=plastic)  ![GitHub](https://img.shields.io/github/license/noobj/go-serverless-services-integration?color=blue&style=plastic) [![Coverage Status](https://coveralls.io/repos/github/noobj/go-serverless-services/badge.svg?branch=main)](https://coveralls.io/github/noobj/go-serverless-services?branch=main)
 <!-- TABLE OF CONTENTS -->
 <details open="open">
   <summary>Table of Contents</summary>
