@@ -3,6 +3,9 @@ plugins:
   - serverless-offline
 frameworkVersion: '3'
 
+custom:
+  stage: ${opt:stage, 'dev'}
+
 provider:
   name: aws
   runtime: go1.x
@@ -16,7 +19,12 @@ provider:
     REFRESH_TOKEN_EXPIRATION_TIME: 36000
     REFRESH_TOKEN_SECRET: ${ssm:/lambda/ahorro/prod/JWT_REFRESH_TOKEN_SECRET}
     TZ: Asia/Taipei
-
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sqs:SendMessage"
+      Resource:
+        - !GetAtt AhorroSyncQueue.Arn
 package:
   patterns:
     - '!./**'
@@ -51,3 +59,20 @@ functions:
         - httpApi:
             path: /auth/refresh
             method: post
+  sync_receive:
+      handler: bin/sync_receiver
+      events:
+        - httpApi:
+            path: /sync
+            method: get
+resources:
+  Resources:
+    AhorroSyncQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName:
+          Fn::Join:
+          - "-"
+          - - AhorroSyncEntries
+            - ${self:custom.stage}
+        VisibilityTimeout: 300

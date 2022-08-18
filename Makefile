@@ -6,6 +6,7 @@ build:
 	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o bin/fetchentries cmd/ahorro/fetchentries/main.go
 	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o bin/login cmd/ahorro/login/main.go
 	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o bin/refresh cmd/ahorro/refresh/main.go
+	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o bin/sync_receiver cmd/ahorro/sync/receiver/main.go
 
 clean:
 	rm -rf ./bin ./vendor Gopkg.lock

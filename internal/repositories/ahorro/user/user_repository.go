@@ -7,9 +7,11 @@ import (
 )
 
 type User struct {
-	Id       primitive.ObjectID `json:"_id" bson:"_id"`
-	Account  string
-	Password string
+	Id                 primitive.ObjectID `json:"_id" bson:"_id"`
+	Account            string
+	Password           string
+	GoogleRefreshToken string `bson:"googleRefreshToken`
+	GoogleAccessToken  string `bson:"googleAccessToken`
 }
 
 type UserRepository struct {
