@@ -10,6 +10,7 @@
     "devDependencies": {
         "nodemon": "^2.0.19",
         "serverless": "^3.21.0",
+        "serverless-dotenv-plugin": "^4.0.2",
         "serverless-offline": "^9.1.6"
     }
 }

@@ -33,6 +33,7 @@ func sendSqsMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error)
 
 	svc := sqs.New(sess)
 	qURL := os.Getenv("SQS_URL")
+	fmt.Printf("%+v", qURL)
 	input.QueueUrl = &qURL
 
 	result, err := svc.SendMessage(input)
