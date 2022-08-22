@@ -69,6 +69,13 @@ functions:
         - httpApi:
             path: /sync
             method: get
+  sync_callback:
+      handler: bin/sync_callback
+      events:
+        - httpApi:
+            path: /sync/callback
+            method: get
+
 resources:
   Resources:
     AhorroSyncQueue:
