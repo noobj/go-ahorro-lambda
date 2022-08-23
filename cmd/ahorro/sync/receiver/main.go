@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -17,6 +18,8 @@ import (
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 func sendSqsMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
@@ -33,7 +36,6 @@ func sendSqsMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error)
 
 	svc := sqs.New(sess)
 	qURL := os.Getenv("SQS_URL")
-	fmt.Printf("%+v", qURL)
 	input.QueueUrl = &qURL
 
 	result, err := svc.SendMessage(input)
@@ -51,6 +53,18 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 	}
 	fmt.Println(user)
+
+	config := &oauth2.Config{
+		ClientID:     "719667836696-c17u3p1dhu6832dp12ovdjk6tfr5qquc.apps.googleusercontent.com",
+		ClientSecret: "92DOsm_TQr3B_xS7647hG6N2",
+		Endpoint:     google.Endpoint,
+		Scopes:       []string{"https://www.googleapis.com/auth/drive.readonly"},
+	}
+
+	randState := fmt.Sprintf("st%d", time.Now().UnixNano())
+	config.RedirectURL = "https://ahorrojs.io/sync/callback"
+	authURL := config.AuthCodeURL(randState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
+	fmt.Println(authURL)
 
 	message := sqs.SendMessageInput{
 		DelaySeconds: aws.Int64(10),
