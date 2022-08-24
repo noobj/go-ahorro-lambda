@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "An example Golang AWS SAM Lambda project."
+Transform: "AWS::Serverless-2016-10-31"
+
+
+Parameters:
+  VaultToken:
+    Type: "String"
+
+
+Globals:
+  Function:
+    Tracing: Active
+    Runtime: "go1.x"
+  Api:
+    TracingEnabled: True
+    Domain:
+      SecurityPolicy: TLS_1_2
+
+
+Resources:
+  exampleOne:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      Handler: bin/sync_receiver
+      Events:
+        ApiEvent:
+          Type: "HttpApi"
+        Api:
+          Type: "Api"
+          Properties:
+            Path: "/sync"
+            Method: "get"
+  exampleTwo:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      Handler: bin/login
+      Events:
+        ApiEvent:
+          Type: "HttpApi"
+        Api:
+          Type: "Api"
+          Properties:
+            Path: "/auth/login"
+            Method: "post"
+  exampleThree:
+      Type: "AWS::Serverless::Function"
+      Properties:
+        Handler: bin/sync_callback
+        Events:
+          ApiEvent:
+            Type: "HttpApi"
+          Api:
+            Type: "Api"
+            Properties:
+              Path: "/sync/callback"
+              Method: "get"

@@ -1,9 +1,13 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/noobj/go-serverless-services/internal/mongodb"
-	. "github.com/noobj/go-serverless-services/internal/repositories"
+	"github.com/noobj/go-serverless-services/internal/repositories"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type User struct {
@@ -15,12 +19,18 @@ type User struct {
 }
 
 type UserRepository struct {
-	AbstractRepository
+	repositories.AbstractRepository
+}
+
+//go:generate mockgen -source=user_repository.go -package repositories -aux_files repositories=../../repository.go -destination mocks/mock_user_repository.go
+type IUserRepository interface {
+	repositories.IRepository
+	UpdateOne(context.Context, interface{}, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 }
 
 func New() *UserRepository {
-	abstractRepository := AbstractRepository{
-		BaseRepository: BaseRepository{
+	abstractRepository := repositories.AbstractRepository{
+		BaseRepository: repositories.BaseRepository{
 			Client:     mongodb.GetInstance(),
 			Collection: mongodb.GetInstance().Database("ahorro").Collection("users"),
 		},
@@ -29,4 +39,9 @@ func New() *UserRepository {
 	repo.IRepository = abstractRepository
 
 	return &repo
+}
+
+func (u UserRepository) UpdateOne(ctx context.Context, filter interface{}, update interface{},
+	opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	return u.Collection.UpdateOne(ctx, filter, update, opts...)
 }

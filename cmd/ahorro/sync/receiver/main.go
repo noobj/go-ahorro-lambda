@@ -20,12 +20,10 @@ import (
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	drive "google.golang.org/api/drive/v3"
 )
 
 func sendSqsMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found", err)
-	}
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
@@ -48,23 +46,45 @@ func sendSqsMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error)
 }
 
 func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found", err)
+	}
+
 	user, ok := helper.GetUserFromContext(ctx)
 	if !ok {
 		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 	}
-	fmt.Println(user)
+
+	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
+	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 
 	config := &oauth2.Config{
-		ClientID:     "719667836696-c17u3p1dhu6832dp12ovdjk6tfr5qquc.apps.googleusercontent.com",
-		ClientSecret: "92DOsm_TQr3B_xS7647hG6N2",
+		ClientID:     googleClientId,
+		ClientSecret: googleClientSecret,
 		Endpoint:     google.Endpoint,
-		Scopes:       []string{"https://www.googleapis.com/auth/drive.readonly"},
+		Scopes:       []string{drive.DriveReadonlyScope},
+		RedirectURL:  "https://ahorrojs.io/sync/callback",
 	}
 
-	randState := fmt.Sprintf("st%d", time.Now().UnixNano())
-	config.RedirectURL = "https://ahorrojs.io/sync/callback"
-	authURL := config.AuthCodeURL(randState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
-	fmt.Println(authURL)
+	token := oauth2.Token{
+		TokenType:    "Bearer",
+		AccessToken:  user.GoogleAccessToken,
+		RefreshToken: user.GoogleRefreshToken,
+	}
+
+	fmt.Println(token)
+	client := config.Client(ctx, &token)
+	service, _ := drive.New(client)
+
+	file, err := service.Files.List().Do()
+
+	fmt.Println(file)
+	if err != nil {
+		log.Printf("Unable to create Drive service: %v", err)
+		randState := fmt.Sprintf("st%d", time.Now().UnixNano())
+		authURL := config.AuthCodeURL(randState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
+		return helper.GenerateApiResponse(authURL)
+	}
 
 	message := sqs.SendMessageInput{
 		DelaySeconds: aws.Int64(10),
