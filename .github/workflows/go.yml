@@ -20,6 +20,7 @@ jobs:
 
     - name: Install tools
       run: |
+        go get github.com/golang/mock/mockgen@v1.6.0
         go install github.com/golang/mock/mockgen
         go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
 
