@@ -48,6 +48,7 @@ jobs:
           ${{ github.actor }}
           Sorry dude, test Failed👎, try again
           Commit : ${{ github.event.commits[0].message }}
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     - name: send telegram message when success
       if: success()
       uses: appleboy/telegram-action@master
@@ -58,6 +59,7 @@ jobs:
           ${{ github.actor }}
           Nisu, looking sharp 👍
           Commit : ${{ github.event.commits[0].message }}
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
   build:
     runs-on: ubuntu-latest
