@@ -18,7 +18,7 @@ func New() *EntryRepository {
 	abstractRepository := AbstractRepository{
 		BaseRepository: BaseRepository{
 			Client:     mongodb.GetInstance(),
-			Collection: mongodb.GetInstance().Database("ahorro").Collection("entries"),
+			Collection: mongodb.GetInstance().Database("swimCrowdDB").Collection("entries"),
 		},
 	}
 	repo := EntryRepository{AbstractRepository: abstractRepository}

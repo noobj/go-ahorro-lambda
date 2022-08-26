@@ -4,7 +4,8 @@
     "version": "1.0.0",
     "scripts": {
         "start": "node ./node_modules/.bin/serverless offline --host 0.0.0.0 start --useDocker",
-        "watch": "nodemon --watch ./ -e go,js --exec make build",
+        "watch": "nodemon --watch ./ -e go --exec make build",
+        "watch_swim": "nodemon --watch ./ -e go --exec make swimbuild",
         "test": "ginkgo ./..."
     },
     "devDependencies": {

@@ -19,7 +19,7 @@ import (
 const OutputFormat = "2006-01-02 15:04:05"
 
 type EntryGroup struct {
-	Date    string                  `json:"date"`
+	Date    string                  `json:"date" bson:"_id"`
 	Entries []EntryRepository.Entry `json:"entries"`
 }
 

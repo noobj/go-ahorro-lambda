@@ -30,10 +30,9 @@ provider:
       Resource:
         - !GetAtt AhorroSyncQueue.Arn
 package:
-  patterns:
-    - '!./**'
-    - ./bin/**
-
+  individually: true
+  exclude:
+    - ./**
 functions:
   dailyfetch:
     handler: bin/dailyfetch
@@ -41,40 +40,68 @@ functions:
       - httpApi:
           path: /crowd/daily
           method: get
+    package:
+      include:
+        - bin/dailyfetch
   crowdscraper:
     handler: bin/crowdscraper
     events:
       - schedule: cron(0,30 0-13,23 * * ? *)
+    package:
+      include:
+        - bin/crowdscraper
+  swimnotify:
+    handler: bin/swimnotify
+    events:
+      - schedule: cron(0 0 ? * 3 *)
+    package:
+      include:
+        - bin/swimnotify
   fetchentries:
     handler: bin/fetchentries
     events:
       - httpApi:
           path: /entries
           method: get
+    package:
+      include:
+        - bin/fetchentries
   login:
     handler: bin/login
     events:
       - httpApi:
           path: /auth/login
           method: post
+    package:
+      include:
+        - bin/login
   refresh:
-      handler: bin/refresh
-      events:
-        - httpApi:
-            path: /auth/refresh
-            method: post
+    handler: bin/refresh
+    events:
+      - httpApi:
+          path: /auth/refresh
+          method: post
+    package:
+      include:
+        - bin/refresh
   sync_receive:
-      handler: bin/sync_receiver
-      events:
-        - httpApi:
-            path: /sync
-            method: get
+    handler: bin/sync_receiver
+    events:
+      - httpApi:
+          path: /sync
+          method: get
+    package:
+      include:
+        - bin/sync_receiver
   sync_callback:
-      handler: bin/sync_callback
-      events:
-        - httpApi:
-            path: /sync/callback
-            method: get
+    handler: bin/sync_callback
+    events:
+      - httpApi:
+          path: /sync/callback
+          method: get
+    package:
+      include:
+        - bin/sync_callback
 
 resources:
   Resources:
