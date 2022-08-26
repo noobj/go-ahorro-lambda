@@ -16,7 +16,7 @@ import (
 
 var _ = Describe("Dailyfetch", func() {
 	var fakeData = []bson.M{
-		{"Date": "2022-07-13",
+		{"_id": "2022-07-13",
 			"Entries": []bson.M{
 				{
 					"Amount": 1234,

@@ -22,7 +22,7 @@ type UserRepository struct {
 	repositories.AbstractRepository
 }
 
-//go:generate mockgen -source=user_repository.go -package repositories -aux_files repositories=../../repository.go -destination mocks/mock_user_repository.go
+//go:generate mockgen -source=user_repository.go -package repositories -aux_files repositories=../../repository.go -destination ../../mocks/user/mock_user_repository.go
 type IUserRepository interface {
 	repositories.IRepository
 	UpdateOne(context.Context, interface{}, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
