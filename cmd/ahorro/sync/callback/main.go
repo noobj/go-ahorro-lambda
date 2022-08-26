@@ -12,6 +12,7 @@ import (
 	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
+	"github.com/noobj/go-serverless-services/internal/mongodb"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,13 +26,29 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
 	}
 
+	randState := struct {
+		User  string
+		State string
+	}{}
+	authRandStateCollection := mongodb.GetInstance().Database("ahorro").Collection("randState")
+	err := authRandStateCollection.FindOne(ctx, bson.M{"user": user.Id.String()}).Decode(&randState)
+
+	if err != nil {
+		fmt.Println("fetch rand state error", err)
+		return helper.GenerateInternalErrorResponse()
+	}
+
+	if randState.State != request.QueryStringParameters["state"] {
+		return events.APIGatewayProxyResponse{Body: "rand state error", StatusCode: 401}, nil
+	}
+
 	config := helper.GenerateOauthConfig()
 
 	token, err := config.Exchange(ctx, request.QueryStringParameters["code"], oauth2.AccessTypeOffline)
 
 	if err != nil {
 		fmt.Println(err)
-		return events.APIGatewayProxyResponse{Body: "internal error", StatusCode: 500}, nil
+		return events.APIGatewayProxyResponse{Body: "exchange code error", StatusCode: 401}, nil
 	}
 
 	container.NamedResolve(&userRepositoryTmp, "UserRepo")

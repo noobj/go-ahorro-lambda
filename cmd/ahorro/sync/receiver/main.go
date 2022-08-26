@@ -13,8 +13,10 @@ import (
 	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
+	"github.com/noobj/go-serverless-services/internal/mongodb"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
+	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/oauth2"
 	drive "google.golang.org/api/drive/v3"
 )
@@ -45,6 +47,12 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		log.Printf("Unable to create Drive service: %v", err)
 		randState := fmt.Sprintf("st%d", time.Now().UnixNano())
 		authURL := config.AuthCodeURL(randState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
+
+		authRandStateCollection := mongodb.GetInstance().Database("ahorro").Collection("randState")
+		authRandStateCollection.InsertOne(ctx, bson.M{
+			"user":  user.Id.String(),
+			"state": randState,
+		})
 		return helper.GenerateApiResponse(authURL)
 	}
 
