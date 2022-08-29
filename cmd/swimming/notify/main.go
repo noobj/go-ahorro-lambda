@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,10 +21,16 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	content := url.QueryEscape("Today is the day for Swimminggg🌊💪🏽\nDon't forget to bring the gears")
 	requestURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s", botId, channelId, content)
 
-	_, err := http.Get(requestURL)
+	res, err := http.Get(requestURL)
 	if err != nil {
 		fmt.Printf("error making http request: %s\n", err)
 		return helper.GenerateInternalErrorResponse()
+	}
+	log.Println(res)
+	if res.StatusCode != 200 {
+		body, error := ioutil.ReadAll(res.Body)
+		res.Body.Close()
+		log.Panicln(string(body), error)
 	}
 
 	return helper.GenerateApiResponse("sent")
