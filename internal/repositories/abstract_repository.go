@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	. "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -13,11 +14,8 @@ type AbstractRepository struct {
 	IRepository
 }
 
-func (repo AbstractRepository) InsertOne(doc interface{}) {
-	_, err := repo.Collection.InsertOne(context.TODO(), doc)
-	if err != nil {
-		panic(err)
-	}
+func (repo AbstractRepository) InsertOne(ctx context.Context, document interface{}, opts ...*options.InsertOneOptions) (*InsertOneResult, error) {
+	return repo.Collection.InsertOne(context.TODO(), document, opts...)
 }
 
 func (repo AbstractRepository) Disconnect() func() {
@@ -45,4 +43,14 @@ func (repo AbstractRepository) Aggregate(stages interface{}) []bson.M {
 
 func (repo AbstractRepository) FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *SingleResult {
 	return repo.Collection.FindOne(ctx, filter, opts...)
+}
+
+func (repo AbstractRepository) DeleteMany(ctx context.Context, filter interface{},
+	opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+	return repo.Collection.DeleteMany(ctx, filter, opts...)
+}
+
+func (repo AbstractRepository) InsertMany(ctx context.Context, documents []interface{},
+	opts ...*options.InsertManyOptions) (*InsertManyResult, error) {
+	return repo.Collection.InsertMany(ctx, documents, opts...)
 }

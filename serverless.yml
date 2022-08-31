@@ -27,6 +27,7 @@ provider:
     - Effect: "Allow"
       Action:
         - "sqs:SendMessage"
+        - "sqs:ReceiveMessage"
       Resource:
         - !GetAtt AhorroSyncQueue.Arn
 package:
@@ -102,7 +103,17 @@ functions:
     package:
       include:
         - bin/sync_callback
-
+  sync_hanlder:
+    handler: bin/sync_handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - AhorroSyncQueue
+              - Arn
+    package:
+      include:
+        - bin/sync_handler
 resources:
   Resources:
     AhorroSyncQueue:

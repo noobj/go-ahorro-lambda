@@ -11,7 +11,7 @@ build:
 	# env GOARCH=amd64 GOOS=linux go build -o bin/refresh cmd/ahorro/refresh/main.go
 	env GOARCH=amd64 GOOS=linux go build -o bin/sync_receiver cmd/ahorro/sync/receiver/main.go
 	env GOARCH=amd64 GOOS=linux go build -o bin/sync_callback cmd/ahorro/sync/callback/main.go
-	env GOARCH=amd64 GOOS=linux go build -o bin/sync_handler cmd/ahorro/sync/handler/main.go
+	env GOARCH=amd64 GOOS=linux go build -o bin/sync_handler cmd/ahorro/sync/handler/*
 
 debug_build:
 	env GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o bin/dailyfetch cmd/swimming/dailyfetch/main.go

@@ -8,10 +8,12 @@ import (
 )
 
 type Entry struct {
-	Id     primitive.ObjectID `json:"_id" bson:"_id"`
-	Amount int                `json:"amount"`
-	Date   string             `json:"date"`
-	Descr  string             `json:"descr"`
+	Id       primitive.ObjectID `json:"_id" bson:"_id"`
+	Amount   int                `json:"amount"`
+	Date     string             `json:"date"`
+	Descr    string             `json:"descr"`
+	Category primitive.ObjectID
+	User     primitive.ObjectID
 }
 
 type Category struct {
