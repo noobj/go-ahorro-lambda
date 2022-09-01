@@ -35,7 +35,7 @@ func insertNewRefreshTokenIntoLoginInfo(userId primitive.ObjectID, refreshToken 
 	}
 	var loginInfoRepository repositories.IRepository
 	container.NamedResolve(&loginInfoRepository, "LoginInfoRepo")
-	loginInfoRepository.InsertOne(loginInfo)
+	loginInfoRepository.InsertOne(context.TODO(), loginInfo)
 }
 
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {

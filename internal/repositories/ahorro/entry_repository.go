@@ -12,8 +12,8 @@ type Entry struct {
 	Amount   int                `json:"amount"`
 	Date     string             `json:"date"`
 	Descr    string             `json:"descr"`
-	Category primitive.ObjectID
-	User     primitive.ObjectID
+	Category primitive.ObjectID `json:"category"`
+	User     primitive.ObjectID `json:"user"`
 }
 
 type Category struct {
