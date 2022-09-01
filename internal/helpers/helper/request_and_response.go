@@ -93,8 +93,14 @@ func ExtractPayloadFromToken(key string, jwtToken string) (interface{}, error) {
 	return claims.Payload, nil
 }
 
-func GenerateInternalErrorResponse() (events.APIGatewayProxyResponse, error) {
-	return events.APIGatewayProxyResponse{Body: "internal error", StatusCode: 500}, nil
+func GenerateInternalErrorResponse(message ...string) (events.APIGatewayProxyResponse, error) {
+	resMessage := ""
+	if len(message) == 0 {
+		resMessage = "internal error"
+	}
+	resMessage = strings.Join(message, "")
+
+	return events.APIGatewayProxyResponse{Body: resMessage, StatusCode: 500}, nil
 }
 
 func GenerateAuthErrorResponse() (events.APIGatewayProxyResponse, error) {

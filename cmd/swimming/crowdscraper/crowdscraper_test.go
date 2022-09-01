@@ -22,7 +22,7 @@ var _ = Describe("Crowdscraper", func() {
 			return m
 		})
 
-		m.EXPECT().InsertOne(matchers.Regexp(`^20\d\d-[0-1][0-9]-[0-3][0-9] \d{2}:\d{2}`)).MaxTimes(1)
+		m.EXPECT().InsertOne(context.TODO(), matchers.Regexp(`^20\d\d-[0-1][0-9]-[0-3][0-9] \d{2}:\d{2}`)).MaxTimes(1)
 		m.EXPECT().Disconnect().Return(func() {}).MaxTimes(1)
 	})
 

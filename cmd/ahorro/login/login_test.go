@@ -43,9 +43,10 @@ var _ = Describe("Login", func() {
 		})
 
 		fakeSingleResult := mongo.NewSingleResultFromDocument(fakeUserDoc, nil, nil)
+		fakeInsertOneResult := mongo.InsertOneResult{InsertedID: 123}
 
 		m.EXPECT().FindOne(context.TODO(), gomock.Any()).Return(fakeSingleResult).MaxTimes(1)
-		m.EXPECT().InsertOne(gomock.Any()).Return().MaxTimes(1)
+		m.EXPECT().InsertOne(context.TODO(), gomock.Any()).Return(&fakeInsertOneResult, nil).MaxTimes(1)
 		m.EXPECT().Disconnect().Return(func() {}).MaxTimes(1)
 		os.Setenv("ACCESS_TOKEN_EXPIRATION_TIME", "3600")
 		os.Setenv("REFRESH_TOKEN_EXPIRATION_TIME", "3600")

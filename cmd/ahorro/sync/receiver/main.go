@@ -56,24 +56,9 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return helper.GenerateApiResponse(authURL)
 	}
 
-	fmt.Printf("%+v", file.Files[0])
 	fileId := file.Files[0].Id
 
-	_, err = service.Files.Get(fileId).Download()
-	// buff := make([]byte, 10)
-	// var tmp []string
-
-	// for {
-	// 	n, err := content.Body.Read(buff)
-	// 	if err == io.EOF {
-	// 		break
-	// 	}
-
-	// 	tmp = append(tmp, string(buff[:n]))
-	// }
-
-	// fmt.Printf("%+v", strings.Join(tmp, ""))
-	if err != nil {
+	if _, err = service.Files.Get(fileId).Do(); err != nil {
 		log.Printf("Unable to create Drive service: %v", err)
 		randState := fmt.Sprintf("st%d", time.Now().UnixNano())
 		authURL := config.AuthCodeURL(randState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
@@ -85,7 +70,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		MessageAttributes: map[string]*sqs.MessageAttributeValue{
 			"UserId": {
 				DataType:    aws.String("String"),
-				StringValue: aws.String(user.Id.String()),
+				StringValue: aws.String(user.Id.Hex()),
 			},
 		},
 		MessageBody: aws.String("Sync ahorro entries with latest backup file"),

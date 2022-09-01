@@ -39,7 +39,7 @@ func Handler(ctx context.Context) (events.APIGatewayProxyResponse, error) {
 	container.Resolve(&entryRepository)
 
 	doc := bson.D{{Key: "amount", Value: crowdCounts[2]}, {Key: "time", Value: time.Now().Format("2006-01-02 15:04")}}
-	entryRepository.InsertOne(doc)
+	entryRepository.InsertOne(ctx, doc)
 
 	fmt.Println("Scrapping done.")
 

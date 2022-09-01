@@ -12,9 +12,11 @@ import (
 type IRepository interface {
 	Aggregate(interface{}) []bson.M
 	// TODO: use generic for Entry type, not bson
-	InsertOne(interface{})
+	InsertOne(context.Context, interface{}, ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
+	InsertMany(context.Context, []interface{}, ...*options.InsertManyOptions) (*mongo.InsertManyResult, error)
 	Disconnect() func()
 	FindOne(context.Context, interface{}, ...*options.FindOneOptions) *mongo.SingleResult
+	DeleteMany(context.Context, interface{}, ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 }
 
 type BaseRepository struct {
