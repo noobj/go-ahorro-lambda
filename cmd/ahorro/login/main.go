@@ -42,7 +42,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	var userRepository repositories.IRepository
 	var requestBody LoginDto
 
-	formData, err := helper.ParseMultipartForm(request.Headers["content-type"], strings.NewReader(request.Body))
+	formData, err := helper.ParseMultipartForm(request.Headers["content-type"], strings.NewReader(request.Body), request.IsBase64Encoded)
 	if err != nil {
 		return events.APIGatewayProxyResponse{Body: "request body error", StatusCode: 400}, nil
 	}

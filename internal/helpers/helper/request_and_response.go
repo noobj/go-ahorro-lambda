@@ -2,6 +2,7 @@ package helper
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -40,7 +41,12 @@ func SetCookie(cookie http.Cookie, reps *events.APIGatewayProxyResponse) {
 	reps.MultiValueHeaders["set-cookie"] = append(reps.MultiValueHeaders["set-cookie"], cookie.String())
 }
 
-func ParseMultipartForm(contentType string, body io.Reader) (*multipart.Form, error) {
+func ParseMultipartForm(contentType string, body io.Reader, isBase64encoded bool) (*multipart.Form, error) {
+
+	if isBase64encoded {
+		body = base64.NewDecoder(base64.StdEncoding, body)
+	}
+
 	mediaType, params, err := mime.ParseMediaType(contentType)
 	if !strings.HasPrefix(mediaType, "multipart/") || err != nil {
 		if err != nil {
