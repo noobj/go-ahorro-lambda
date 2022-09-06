@@ -64,10 +64,10 @@ var _ = Describe("Login", func() {
 
 			res, err := main.Handler(context.TODO(), fakeRequest)
 
-			header := res.MultiValueHeaders
+			header := res.Cookies
 			Expect(err).To(BeNil())
-			Expect(header["set-cookie"][0]).Should(ContainSubstring("token"))
-			Expect(header["set-cookie"][1]).Should(ContainSubstring("token"))
+			Expect(header[0]).Should(ContainSubstring("token"))
+			Expect(header[1]).Should(ContainSubstring("token"))
 		})
 	})
 

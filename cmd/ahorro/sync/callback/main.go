@@ -35,7 +35,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	if err != nil {
 		fmt.Println("fetch rand state error", err)
-		return helper.GenerateInternalErrorResponse()
+		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
 	}
 
 	if randState.State != request.QueryStringParameters["state"] {
@@ -56,13 +56,13 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	if !ok {
 		log.Println("resolve repository error")
-		return helper.GenerateInternalErrorResponse()
+		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
 	}
 
 	_, err = userRepository.UpdateOne(context.TODO(), bson.M{"account": user.Account}, bson.M{"$set": bson.M{"googleAccessToken": token.AccessToken, "googleRefreshToken": token.RefreshToken}})
 	if err != nil {
 		log.Println("update error", err)
-		return helper.GenerateInternalErrorResponse()
+		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
 	}
 
 	message := sqs.SendMessageInput{
@@ -78,7 +78,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	_, err = helper.SendSqsMessage(&message)
 	if err != nil {
 		log.Println("sending sqs error: ", err)
-		return helper.GenerateInternalErrorResponse()
+		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
 	}
 
 	return helper.GenerateApiResponse("ok")

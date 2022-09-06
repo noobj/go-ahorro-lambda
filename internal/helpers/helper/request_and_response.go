@@ -17,6 +17,10 @@ import (
 	"github.com/noobj/go-serverless-services/internal/types"
 )
 
+type ApiResponse interface {
+	events.APIGatewayProxyResponse | events.APIGatewayV2HTTPResponse
+}
+
 func GenerateApiResponse(resultForBody interface{}) (events.APIGatewayProxyResponse, error) {
 	var buf bytes.Buffer
 	body, err := json.Marshal(resultForBody)
@@ -37,8 +41,8 @@ func GenerateApiResponse(resultForBody interface{}) (events.APIGatewayProxyRespo
 	return resp, nil
 }
 
-func SetCookie(cookie http.Cookie, reps *events.APIGatewayProxyResponse) {
-	reps.MultiValueHeaders["set-cookie"] = append(reps.MultiValueHeaders["set-cookie"], cookie.String())
+func SetCookie(cookie http.Cookie, reps *events.APIGatewayV2HTTPResponse) {
+	reps.Cookies = append(reps.Cookies, cookie.String())
 }
 
 func ParseMultipartForm(contentType string, body io.Reader, isBase64encoded bool) (*multipart.Form, error) {
@@ -99,16 +103,26 @@ func ExtractPayloadFromToken(key string, jwtToken string) (interface{}, error) {
 	return claims.Payload, nil
 }
 
-func GenerateInternalErrorResponse(message ...string) (events.APIGatewayProxyResponse, error) {
+func GenerateInternalErrorResponse[T ApiResponse](message ...string) (T, error) {
 	resMessage := ""
 	if len(message) == 0 {
 		resMessage = "internal error"
 	}
 	resMessage = strings.Join(message, "")
 
-	return events.APIGatewayProxyResponse{Body: resMessage, StatusCode: 500}, nil
+	res := events.APIGatewayProxyResponse{
+		Body:       resMessage,
+		StatusCode: 500,
+	}
+
+	return any(res).(T), nil
 }
 
-func GenerateAuthErrorResponse() (events.APIGatewayProxyResponse, error) {
-	return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
+func GenerateAuthErrorResponse[T ApiResponse]() (T, error) {
+	res := events.APIGatewayProxyResponse{
+		Body:       "please login in",
+		StatusCode: 401,
+	}
+
+	return any(res).(T), nil
 }

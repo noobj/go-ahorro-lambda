@@ -55,9 +55,9 @@ var _ = Describe("Refresh", func() {
 
 			res, err := main.Handler(context.TODO(), fakeRequest)
 
-			header := res.MultiValueHeaders
+			header := res.Cookies
 			Expect(err).To(BeNil())
-			Expect(header["set-cookie"][0]).Should(ContainSubstring("access_token"))
+			Expect(header[0]).Should(ContainSubstring("access_token"))
 			Expect(res.StatusCode).To(Equal(200))
 		})
 	})

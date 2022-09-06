@@ -78,7 +78,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	_, err = helper.SendSqsMessage(&message)
 	if err != nil {
 		log.Println("sending sqs error: ", err)
-		return helper.GenerateInternalErrorResponse()
+		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
 	}
 
 	return helper.GenerateApiResponse("ok")

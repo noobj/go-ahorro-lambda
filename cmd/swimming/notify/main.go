@@ -24,7 +24,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	res, err := http.Get(requestURL)
 	if err != nil {
 		fmt.Printf("error making http request: %s\n", err)
-		return helper.GenerateInternalErrorResponse()
+		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
 	}
 	log.Println(res)
 	if res.StatusCode != 200 {

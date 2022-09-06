@@ -38,19 +38,19 @@ func insertNewRefreshTokenIntoLoginInfo(userId primitive.ObjectID, refreshToken 
 	loginInfoRepository.InsertOne(context.TODO(), loginInfo)
 }
 
-func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayV2HTTPResponse, error) {
 	var userRepository repositories.IRepository
 	var requestBody LoginDto
 
 	formData, err := helper.ParseMultipartForm(request.Headers["content-type"], strings.NewReader(request.Body), request.IsBase64Encoded)
 	if err != nil {
-		return events.APIGatewayProxyResponse{Body: "request body error", StatusCode: 400}, nil
+		return events.APIGatewayV2HTTPResponse{Body: "request body error", StatusCode: 400}, nil
 	}
 
 	requestBody.Account = formData.Value["account"][0]
 	requestBody.Password = formData.Value["password"][0]
 	if requestBody.Account == "" {
-		return events.APIGatewayProxyResponse{Body: "request body error", StatusCode: 400}, nil
+		return events.APIGatewayV2HTTPResponse{Body: "request body error", StatusCode: 400}, nil
 	}
 
 	container.NamedResolve(&userRepository, "UserRepo")
@@ -59,13 +59,13 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	err = userRepository.FindOne(context.TODO(), bson.M{"account": requestBody.Account}).Decode(&user)
 	if err != nil {
 		log.Println(err)
-		return events.APIGatewayProxyResponse{Body: "couldn't find the user", StatusCode: 404}, nil
+		return events.APIGatewayV2HTTPResponse{Body: "couldn't find the user", StatusCode: 404}, nil
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestBody.Password))
 	if err != nil {
 		log.Println(err)
-		return events.APIGatewayProxyResponse{Body: "account and password not match", StatusCode: 404}, nil
+		return events.APIGatewayV2HTTPResponse{Body: "account and password not match", StatusCode: 404}, nil
 	}
 
 	if err := godotenv.Load(); err != nil {
@@ -75,25 +75,22 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	token, err := helper.GenerateAccessToken(user.Id.Hex())
 	if err != nil {
 		log.Println("Couldn't generate access token", err)
-		return helper.GenerateInternalErrorResponse()
+		return events.APIGatewayV2HTTPResponse{Body: "internal error", StatusCode: 500}, nil
 	}
 
 	refreshToken, err := helper.GenerateRefreshToken(user.Id.Hex())
 	if err != nil {
 		log.Println("Couldn't generate refresh token", err)
-		return helper.GenerateInternalErrorResponse()
+		return events.APIGatewayV2HTTPResponse{Body: "internal error", StatusCode: 500}, nil
 	}
 
 	insertNewRefreshTokenIntoLoginInfo(user.Id, refreshToken)
 
-	resp := events.APIGatewayProxyResponse{
+	resp := events.APIGatewayV2HTTPResponse{
 		StatusCode:      200,
 		IsBase64Encoded: false,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
-		},
-		MultiValueHeaders: map[string][]string{
-			"set-cookie": nil,
 		},
 	}
 
@@ -103,17 +100,17 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		Name:     "access_token",
 		Value:    token,
 		HttpOnly: true,
-		// Secure:   true,
-		Expires: time.Now().Add(time.Second * time.Duration(accessTokenExpireTime)),
-		Path:    "/",
+		Secure:   true,
+		Expires:  time.Now().Add(time.Second * time.Duration(accessTokenExpireTime)),
+		Path:     "/",
 	}
 	cookieWithRefreshTkn := http.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshToken,
 		HttpOnly: true,
-		// Secure:   true,
-		Expires: time.Now().Add(time.Second * time.Duration(refreshTokenExpireTime)),
-		Path:    "/auth",
+		Secure:   true,
+		Expires:  time.Now().Add(time.Second * time.Duration(refreshTokenExpireTime)),
+		Path:     "/auth",
 	}
 	helper.SetCookie(cookieWithAccessTkn, &resp)
 	helper.SetCookie(cookieWithRefreshTkn, &resp)
