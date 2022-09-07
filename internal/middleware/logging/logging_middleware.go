@@ -8,7 +8,7 @@ import (
 	"github.com/noobj/go-serverless-services/internal/middleware"
 )
 
-func Logging(f middleware.HandlerFunc[events.APIGatewayProxyRequest]) middleware.HandlerFunc[events.APIGatewayProxyRequest] {
+func Logging(f middleware.HandlerFunc[events.APIGatewayProxyRequest, events.APIGatewayProxyResponse]) middleware.HandlerFunc[events.APIGatewayProxyRequest, events.APIGatewayProxyResponse] {
 	return func(ctx context.Context, r events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 		r = events.APIGatewayProxyRequest(r)
 		log.Printf("remote_addr: %s", r.RequestContext.Identity.SourceIP)

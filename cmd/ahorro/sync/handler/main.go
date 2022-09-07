@@ -51,6 +51,10 @@ type CategoryItem struct {
 	Name string
 }
 
+var internalErrorhandler = func(message ...string) (events.APIGatewayProxyResponse, error) {
+	return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500, message...)
+}
+
 func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxyResponse, error) {
 	var userRepository repositories.IRepository
 	container.NamedResolve(&userRepository, "UserRepo")
@@ -65,7 +69,7 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 	err := userRepository.FindOne(context.TODO(), bson.M{"_id": userObjectId}).Decode(&user)
 	if err != nil {
 		log.Println(err)
-		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]("error: user not found")
+		return internalErrorhandler("error: user not found")
 	}
 	config := helper.GenerateOauthConfig()
 
@@ -84,7 +88,7 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 
 	if err != nil {
 		log.Printf("google service error: %v", err)
-		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]("error: google service error")
+		return internalErrorhandler("error: google service error")
 	}
 
 	fileId := file.Files[0].Id
@@ -93,7 +97,7 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 
 	if err != nil {
 		log.Printf("google service error: %v", err)
-		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]("error: google service error")
+		return internalErrorhandler("error: google service error")
 	}
 
 	buff := make([]byte, 10)
@@ -117,7 +121,7 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 			err = mapstructure.Decode(table.Items, &entryItems)
 			if err != nil {
 				log.Println("Json format error in the expense sector", err)
-				return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
+				return internalErrorhandler()
 			}
 		}
 
@@ -125,7 +129,7 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 			err = mapstructure.Decode(table.Items, &categoryItems)
 			if err != nil {
 				log.Println("Json format error in the category sector", err)
-				return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
+				return internalErrorhandler()
 			}
 		}
 	}
@@ -167,10 +171,10 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 
 	if err != nil {
 		log.Println("Something wrong in Transaction", err)
-		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
+		return internalErrorhandler()
 	}
 
-	return helper.GenerateApiResponse("ok")
+	return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("ok")
 }
 
 func collateCategoryItems(categoryItems []CategoryItem, userId primitive.ObjectID) ([]interface{}, map[string]primitive.ObjectID) {

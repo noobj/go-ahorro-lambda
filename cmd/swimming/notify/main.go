@@ -24,7 +24,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	res, err := http.Get(requestURL)
 	if err != nil {
 		fmt.Printf("error making http request: %s\n", err)
-		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
+		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](401)
 	}
 	log.Println(res)
 	if res.StatusCode != 200 {
@@ -33,7 +33,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		log.Panicln(string(body), error)
 	}
 
-	return helper.GenerateApiResponse("sent")
+	return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("sent")
 }
 
 func main() {

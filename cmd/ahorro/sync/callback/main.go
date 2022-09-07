@@ -19,11 +19,19 @@ import (
 	"golang.org/x/oauth2"
 )
 
+var authErrorhandler = func(message ...string) (events.APIGatewayProxyResponse, error) {
+	return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](401, message...)
+}
+
+var internalErrorhandler = func() (events.APIGatewayProxyResponse, error) {
+	return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500)
+}
+
 func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	var userRepositoryTmp repositories.IRepository
 	user, ok := helper.GetUserFromContext(ctx)
 	if !ok {
-		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
+		return authErrorhandler()
 	}
 
 	randState := struct {
@@ -35,11 +43,11 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	if err != nil {
 		fmt.Println("fetch rand state error", err)
-		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
+		return internalErrorhandler()
 	}
 
 	if randState.State != request.QueryStringParameters["state"] {
-		return events.APIGatewayProxyResponse{Body: "rand state error", StatusCode: 401}, nil
+		return authErrorhandler("rand state error")
 	}
 
 	config := helper.GenerateOauthConfig()
@@ -48,7 +56,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	if err != nil {
 		fmt.Println(err)
-		return events.APIGatewayProxyResponse{Body: "exchange code error", StatusCode: 401}, nil
+		return authErrorhandler("exchange code error")
 	}
 
 	container.NamedResolve(&userRepositoryTmp, "UserRepo")
@@ -56,13 +64,13 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	if !ok {
 		log.Println("resolve repository error")
-		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
+		return internalErrorhandler()
 	}
 
 	_, err = userRepository.UpdateOne(context.TODO(), bson.M{"account": user.Account}, bson.M{"$set": bson.M{"googleAccessToken": token.AccessToken, "googleRefreshToken": token.RefreshToken}})
 	if err != nil {
 		log.Println("update error", err)
-		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
+		return internalErrorhandler()
 	}
 
 	message := sqs.SendMessageInput{
@@ -78,10 +86,10 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	_, err = helper.SendSqsMessage(&message)
 	if err != nil {
 		log.Println("sending sqs error: ", err)
-		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
+		return internalErrorhandler()
 	}
 
-	return helper.GenerateApiResponse("ok")
+	return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("ok")
 }
 
 func main() {

@@ -47,7 +47,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	sortByDateInput, sortExist := request.QueryStringParameters["entriesSortByDate"]
 
 	if !checkTimeFormat("2006-01-02", startFromQuery) || !checkTimeFormat("2006-01-02", endFromQuery) || !startExist || !endExist {
-		return events.APIGatewayProxyResponse{Body: "request query error", StatusCode: 400}, nil
+		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](400, "request query error")
 	}
 
 	var sortColumn string
@@ -155,7 +155,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		Total:      total,
 	}
 
-	return helper.GenerateApiResponse(resultForReturn)
+	return helper.GenerateApiResponse[events.APIGatewayProxyResponse](resultForReturn)
 }
 
 func main() {

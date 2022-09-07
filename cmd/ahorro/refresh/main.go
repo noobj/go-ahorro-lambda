@@ -24,21 +24,23 @@ type LoginDto struct {
 	Password string
 }
 
+var errorHandler = helper.GenerateErrorResponse[events.APIGatewayV2HTTPResponse]
+
 func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	cookiesMap := helper.ParseCookie(request.Cookies)
 
 	if _, ok := cookiesMap["refresh_token"]; !ok {
-		return helper.GenerateAuthErrorResponse[events.APIGatewayV2HTTPResponse]()
+		return errorHandler(401)
 	}
 	key := os.Getenv("REFRESH_TOKEN_SECRET")
 	payload, err := helper.ExtractPayloadFromToken(key, cookiesMap["refresh_token"])
 	if err != nil {
-		return helper.GenerateAuthErrorResponse[events.APIGatewayV2HTTPResponse]()
+		return errorHandler(401)
 	}
 	userId, ok := payload.(string)
 	if !ok {
 		log.Printf("wrong payload format: %v", payload)
-		return helper.GenerateAuthErrorResponse[events.APIGatewayV2HTTPResponse]()
+		return errorHandler(401)
 	}
 
 	var loginInfoRepository repositories.IRepository
@@ -48,7 +50,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	if loginInfo.User.Hex() != userId {
 		fmt.Println(loginInfo.User.Hex(), userId)
-		return helper.GenerateAuthErrorResponse[events.APIGatewayV2HTTPResponse]()
+		return errorHandler(401)
 	}
 
 	if err := godotenv.Load(); err != nil {
@@ -58,7 +60,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	token, err := helper.GenerateAccessToken(userId)
 	if err != nil {
 		log.Println("Couldn't generate access token", err)
-		return helper.GenerateInternalErrorResponse[events.APIGatewayV2HTTPResponse]()
+		return errorHandler(401)
 	}
 
 	resp := events.APIGatewayV2HTTPResponse{

@@ -16,25 +16,25 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func Auth[T middleware.ApiRequest](f middleware.HandlerFunc[T]) middleware.HandlerFunc[T] {
-	return func(ctx context.Context, r T) (events.APIGatewayProxyResponse, error) {
+func Auth[T middleware.ApiRequest, R helper.ApiResponse](f middleware.HandlerFunc[T, R]) middleware.HandlerFunc[T, R] {
+	return func(ctx context.Context, r T) (R, error) {
 		v2Request, ok := any(r).(events.APIGatewayV2HTTPRequest)
 		if !ok {
-			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
+			return helper.GenerateErrorResponse[R](401)
 		}
 		cookiesMap := helper.ParseCookie(v2Request.Cookies)
 		if _, ok := cookiesMap["access_token"]; !ok {
-			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
+			return helper.GenerateErrorResponse[R](401)
 		}
 
 		key := os.Getenv("ACCESS_TOKEN_SECRET")
 		payload, err := helper.ExtractPayloadFromToken(key, cookiesMap["access_token"])
 		if err != nil {
-			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
+			return helper.GenerateErrorResponse[R](401)
 		}
 		user, err := getUserForPayload(payload)
 		if err != nil {
-			return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
+			return helper.GenerateErrorResponse[R](401)
 		}
 
 		ctxWithUser := context.WithValue(ctx, helper.ContextKeyUser, *user)

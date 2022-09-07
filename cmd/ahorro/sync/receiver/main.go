@@ -22,10 +22,9 @@ import (
 )
 
 func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
-
 	user, ok := helper.GetUserFromContext(ctx)
 	if !ok {
-		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
+		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](401)
 	}
 
 	config := helper.GenerateOauthConfig()
@@ -53,7 +52,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 			"user":  user.Id.String(),
 			"state": randState,
 		})
-		return helper.GenerateApiResponse(authURL)
+		return helper.GenerateApiResponse[events.APIGatewayProxyResponse](authURL)
 	}
 
 	fileId := file.Files[0].Id
@@ -62,7 +61,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		log.Printf("Unable to create Drive service: %v", err)
 		randState := fmt.Sprintf("st%d", time.Now().UnixNano())
 		authURL := config.AuthCodeURL(randState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
-		return helper.GenerateApiResponse(authURL)
+		return helper.GenerateApiResponse[events.APIGatewayProxyResponse](authURL)
 	}
 
 	message := sqs.SendMessageInput{
@@ -78,10 +77,10 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	_, err = helper.SendSqsMessage(&message)
 	if err != nil {
 		log.Println("sending sqs error: ", err)
-		return helper.GenerateInternalErrorResponse[events.APIGatewayProxyResponse]()
+		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500)
 	}
 
-	return helper.GenerateApiResponse("ok")
+	return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("ok")
 }
 
 func main() {

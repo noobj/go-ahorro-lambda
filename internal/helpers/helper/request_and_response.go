@@ -10,6 +10,7 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -21,24 +22,43 @@ type ApiResponse interface {
 	events.APIGatewayProxyResponse | events.APIGatewayV2HTTPResponse
 }
 
-func GenerateApiResponse(resultForBody interface{}) (events.APIGatewayProxyResponse, error) {
+func GenerateApiResponse[T ApiResponse](resultForBody interface{}) (T, error) {
 	var buf bytes.Buffer
 	body, err := json.Marshal(resultForBody)
+	var res (interface{})
+	// TODO: any better any to do this mess
 	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 404}, err
+		if reflect.TypeOf(*new(T)).Name() == "APIGatewayProxyResponse" {
+			res = events.APIGatewayProxyResponse{StatusCode: 404}
+		} else {
+			res = events.APIGatewayV2HTTPResponse{StatusCode: 404}
+		}
+		return res.(T), err
 	}
+
 	json.HTMLEscape(&buf, body)
 
-	resp := events.APIGatewayProxyResponse{
-		StatusCode:      200,
-		IsBase64Encoded: false,
-		Body:            buf.String(),
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
+	if reflect.TypeOf(*new(T)).Name() == "APIGatewayProxyResponse" {
+		res = events.APIGatewayProxyResponse{
+			StatusCode:      200,
+			IsBase64Encoded: false,
+			Body:            buf.String(),
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+		}
+	} else {
+		res = events.APIGatewayV2HTTPResponse{
+			StatusCode:      200,
+			IsBase64Encoded: false,
+			Body:            buf.String(),
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+		}
 	}
 
-	return resp, nil
+	return res.(T), nil
 }
 
 func SetCookie(cookie http.Cookie, reps *events.APIGatewayV2HTTPResponse) {
@@ -103,26 +123,31 @@ func ExtractPayloadFromToken(key string, jwtToken string) (interface{}, error) {
 	return claims.Payload, nil
 }
 
-func GenerateInternalErrorResponse[T ApiResponse](message ...string) (T, error) {
-	resMessage := ""
-	if len(message) == 0 {
-		resMessage = "internal error"
-	}
-	resMessage = strings.Join(message, "")
-
-	res := events.APIGatewayProxyResponse{
-		Body:       resMessage,
-		StatusCode: 500,
-	}
-
-	return any(res).(T), nil
+var StatusCodeDefaultMsgMap = map[int]string{
+	401: "please login in",
+	500: "internal error",
 }
 
-func GenerateAuthErrorResponse[T ApiResponse]() (T, error) {
-	res := events.APIGatewayProxyResponse{
-		Body:       "please login in",
-		StatusCode: 401,
+func GenerateErrorResponse[T ApiResponse](statusCode int, messages ...string) (T, error) {
+	messageResp := StatusCodeDefaultMsgMap[statusCode]
+	if len(messages) != 0 {
+		messageResp = strings.Join(messages, "")
 	}
 
-	return any(res).(T), nil
+	var res (interface{})
+
+	// TODO: any better any to do this mess
+	if reflect.TypeOf(*new(T)).Name() == "APIGatewayProxyResponse" {
+		res = events.APIGatewayProxyResponse{
+			Body:       messageResp,
+			StatusCode: statusCode,
+		}
+	} else {
+		res = events.APIGatewayV2HTTPResponse{
+			Body:       messageResp,
+			StatusCode: statusCode,
+		}
+	}
+
+	return res.(T), nil
 }

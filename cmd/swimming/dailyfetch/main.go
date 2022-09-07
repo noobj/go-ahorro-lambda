@@ -93,7 +93,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		results = append(results, result)
 	}
 
-	return helper.GenerateApiResponse(results)
+	return helper.GenerateApiResponse[events.APIGatewayProxyResponse](results)
 }
 
 func main() {
