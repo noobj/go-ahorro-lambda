@@ -41,17 +41,16 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	service, _ := drive.New(client)
 
 	file, err := service.Files.List().Q("name contains 'ahorro'").OrderBy("createdTime desc").PageSize(1).Do()
+	randState := fmt.Sprintf("st%d", time.Now().UnixNano())
+	authURL := config.AuthCodeURL(randState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
+	authRandStateCollection := mongodb.GetInstance().Database("ahorro").Collection("randState")
+	authRandStateCollection.InsertOne(ctx, bson.M{
+		"user":  user.Id.String(),
+		"state": randState,
+	})
 
 	if err != nil {
 		log.Printf("Unable to create Drive service: %v", err)
-		randState := fmt.Sprintf("st%d", time.Now().UnixNano())
-		authURL := config.AuthCodeURL(randState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
-
-		authRandStateCollection := mongodb.GetInstance().Database("ahorro").Collection("randState")
-		authRandStateCollection.InsertOne(ctx, bson.M{
-			"user":  user.Id.String(),
-			"state": randState,
-		})
 		return helper.GenerateApiResponse[events.APIGatewayProxyResponse](authURL)
 	}
 
@@ -59,8 +58,6 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	if _, err = service.Files.Get(fileId).Do(); err != nil {
 		log.Printf("Unable to create Drive service: %v", err)
-		randState := fmt.Sprintf("st%d", time.Now().UnixNano())
-		authURL := config.AuthCodeURL(randState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 		return helper.GenerateApiResponse[events.APIGatewayProxyResponse](authURL)
 	}
 

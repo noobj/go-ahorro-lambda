@@ -10,7 +10,6 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -25,40 +24,41 @@ type ApiResponse interface {
 func GenerateApiResponse[T ApiResponse](resultForBody interface{}) (T, error) {
 	var buf bytes.Buffer
 	body, err := json.Marshal(resultForBody)
-	var res (interface{})
+
+	var res T
+
 	// TODO: any better any to do this mess
 	if err != nil {
-		if reflect.TypeOf(*new(T)).Name() == "APIGatewayProxyResponse" {
-			res = events.APIGatewayProxyResponse{StatusCode: 404}
-		} else {
-			res = events.APIGatewayV2HTTPResponse{StatusCode: 404}
+		switch t := any(&res).(type) {
+		case *events.APIGatewayProxyResponse:
+			t.StatusCode = 404
+		case *events.APIGatewayV2HTTPResponse:
+			t.StatusCode = 404
 		}
-		return res.(T), err
+
+		return res, err
 	}
 
 	json.HTMLEscape(&buf, body)
 
-	if reflect.TypeOf(*new(T)).Name() == "APIGatewayProxyResponse" {
-		res = events.APIGatewayProxyResponse{
-			StatusCode:      200,
-			IsBase64Encoded: false,
-			Body:            buf.String(),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+	switch t := any(&res).(type) {
+	case *events.APIGatewayProxyResponse:
+		t.StatusCode = 200
+		t.IsBase64Encoded = false
+		t.Body = buf.String()
+		t.Headers = map[string]string{
+			"Content-Type": "application/json",
 		}
-	} else {
-		res = events.APIGatewayV2HTTPResponse{
-			StatusCode:      200,
-			IsBase64Encoded: false,
-			Body:            buf.String(),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+	case *events.APIGatewayV2HTTPResponse:
+		t.StatusCode = 200
+		t.IsBase64Encoded = false
+		t.Body = buf.String()
+		t.Headers = map[string]string{
+			"Content-Type": "application/json",
 		}
 	}
 
-	return res.(T), nil
+	return res, nil
 }
 
 func SetCookie(cookie http.Cookie, reps *events.APIGatewayV2HTTPResponse) {
@@ -134,19 +134,17 @@ func GenerateErrorResponse[T ApiResponse](statusCode int, messages ...string) (T
 		messageResp = strings.Join(messages, "")
 	}
 
-	var res (interface{})
-
-	// TODO: any better any to do this mess
-	if reflect.TypeOf(*new(T)).Name() == "APIGatewayProxyResponse" {
-		res = events.APIGatewayProxyResponse{
-			Body:       messageResp,
-			StatusCode: statusCode,
-		}
-	} else {
-		res = events.APIGatewayV2HTTPResponse{
-			Body:       messageResp,
-			StatusCode: statusCode,
-		}
+	var resType T
+	var res any
+	switch t := any(resType).(type) {
+	case events.APIGatewayProxyResponse:
+		t.Body = messageResp
+		t.StatusCode = statusCode
+		res = t
+	case events.APIGatewayV2HTTPResponse:
+		t.Body = messageResp
+		t.StatusCode = statusCode
+		res = t
 	}
 
 	return res.(T), nil
