@@ -17,11 +17,7 @@ import (
 	"github.com/noobj/go-serverless-services/internal/types"
 )
 
-type ApiResponse interface {
-	events.APIGatewayProxyResponse | events.APIGatewayV2HTTPResponse
-}
-
-func GenerateApiResponse[T ApiResponse](resultForBody interface{}) (T, error) {
+func GenerateApiResponse[T types.ApiResponse](resultForBody interface{}) (T, error) {
 	var buf bytes.Buffer
 	body, err := json.Marshal(resultForBody)
 
@@ -59,6 +55,28 @@ func GenerateApiResponse[T ApiResponse](resultForBody interface{}) (T, error) {
 	}
 
 	return res, nil
+}
+
+func GenerateErrorResponse[T types.ApiResponse](statusCode int, messages ...string) (T, error) {
+	messageResp := StatusCodeDefaultMsgMap[statusCode]
+	if len(messages) != 0 {
+		messageResp = strings.Join(messages, "")
+	}
+
+	var resType T
+	var res any
+	switch t := any(resType).(type) {
+	case events.APIGatewayProxyResponse:
+		t.Body = messageResp
+		t.StatusCode = statusCode
+		res = t
+	case events.APIGatewayV2HTTPResponse:
+		t.Body = messageResp
+		t.StatusCode = statusCode
+		res = t
+	}
+
+	return res.(T), nil
 }
 
 func SetCookie(cookie http.Cookie, reps *events.APIGatewayV2HTTPResponse) {
@@ -126,26 +144,4 @@ func ExtractPayloadFromToken(key string, jwtToken string) (interface{}, error) {
 var StatusCodeDefaultMsgMap = map[int]string{
 	401: "please login in",
 	500: "internal error",
-}
-
-func GenerateErrorResponse[T ApiResponse](statusCode int, messages ...string) (T, error) {
-	messageResp := StatusCodeDefaultMsgMap[statusCode]
-	if len(messages) != 0 {
-		messageResp = strings.Join(messages, "")
-	}
-
-	var resType T
-	var res any
-	switch t := any(resType).(type) {
-	case events.APIGatewayProxyResponse:
-		t.Body = messageResp
-		t.StatusCode = statusCode
-		res = t
-	case events.APIGatewayV2HTTPResponse:
-		t.Body = messageResp
-		t.StatusCode = statusCode
-		res = t
-	}
-
-	return res.(T), nil
 }

@@ -12,11 +12,12 @@ import (
 	"github.com/noobj/go-serverless-services/internal/middleware"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
+	"github.com/noobj/go-serverless-services/internal/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func Auth[T middleware.ApiRequest, R helper.ApiResponse](f middleware.HandlerFunc[T, R]) middleware.HandlerFunc[T, R] {
+func Auth[T types.ApiRequest, R types.ApiResponse](f middleware.HandlerFunc[T, R]) middleware.HandlerFunc[T, R] {
 	return func(ctx context.Context, r T) (R, error) {
 		v2Request, ok := any(r).(events.APIGatewayV2HTTPRequest)
 		if !ok {
