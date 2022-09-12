@@ -21,6 +21,7 @@ provider:
     REFRESH_TOKEN_EXPIRATION_TIME: 36000
     REFRESH_TOKEN_SECRET: ${ssm:/lambda/ahorro/prod/JWT_REFRESH_TOKEN_SECRET}
     TZ: Asia/Taipei
+    DYNAMO_RAND_TABLE: AhorroUserRandstate-${self:custom.stage}
     SQS_URL:
       Ref: AhorroSyncQueue
   iamRoleStatements:
@@ -30,6 +31,12 @@ provider:
         - "sqs:ReceiveMessage"
       Resource:
         - !GetAtt AhorroSyncQueue.Arn
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+      Resource:
+        - !GetAtt AhorroDynamoRandstate.Arn
 package:
   individually: true
   exclude:
@@ -54,7 +61,10 @@ functions:
   swimnotify:
     handler: bin/swimnotify
     events:
-      - schedule: cron(0 0 ? * 3 *)
+      - schedule: cron(0 10 ? * 2 *)
+      - httpApi:
+          path: /notify
+          method: get
     package:
       include:
         - bin/swimnotify
@@ -125,3 +135,21 @@ resources:
           - - AhorroSyncEntries
             - ${self:custom.stage}
         VisibilityTimeout: 300
+    AhorroDynamoRandstate:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: UserId
+            AttributeType: SGkjjjjjjjjjjjj
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        KeySchema:
+          - AttributeName: UserId
+            KeyType: HASH
+        TableName:
+          Fn::Join:
+            - "-"
+            - - AhorroUserRandstate
+              - ${self:custom.stage}

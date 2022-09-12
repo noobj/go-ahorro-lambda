@@ -4,19 +4,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
-	"github.com/noobj/go-serverless-services/internal/mongodb"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
-	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/oauth2"
 	drive "google.golang.org/api/drive/v3"
 )
@@ -40,14 +41,36 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	client := config.Client(ctx, &token)
 	service, _ := drive.New(client)
 
-	file, err := service.Files.List().Q("name contains 'ahorro'").OrderBy("createdTime desc").PageSize(1).Do()
+	randStateTable := os.Getenv("DYNAMO_RAND_TABLE")
+
 	randState := fmt.Sprintf("st%d", time.Now().UnixNano())
 	authURL := config.AuthCodeURL(randState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
-	authRandStateCollection := mongodb.GetInstance().Database("ahorro").Collection("randState")
-	authRandStateCollection.InsertOne(ctx, bson.M{
-		"user":  user.Id.String(),
-		"state": randState,
-	})
+
+	session, _ := session.NewSession()
+	svc := dynamodb.New(session)
+	input := &dynamodb.PutItemInput{
+		Item: map[string]*dynamodb.AttributeValue{
+			"UserId": {
+				S: aws.String(user.Id.Hex()),
+			},
+			"Randstate": {
+				S: aws.String(randState),
+			},
+			"ttl": {
+				N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Minute*5).Unix())),
+			},
+		},
+		TableName: aws.String(randStateTable),
+	}
+
+	_, err := svc.PutItem(input)
+
+	if err != nil {
+		log.Printf("Dynamo error: %v", err)
+		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500)
+	}
+
+	file, err := service.Files.List().Q("name contains 'ahorro'").OrderBy("createdTime desc").PageSize(1).Do()
 
 	if err != nil {
 		log.Printf("Unable to create Drive service: %v", err)

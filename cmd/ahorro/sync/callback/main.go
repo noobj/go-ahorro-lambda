@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
-	"github.com/noobj/go-serverless-services/internal/mongodb"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,19 +36,26 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return authErrorhandler()
 	}
 
-	randState := struct {
-		User  string
-		State string
-	}{}
-	authRandStateCollection := mongodb.GetInstance().Database("ahorro").Collection("randState")
-	err := authRandStateCollection.FindOne(ctx, bson.M{"user": user.Id.String()}).Decode(&randState)
+	randStateTable := os.Getenv("DYNAMO_RAND_TABLE")
+	session, _ := session.NewSession()
+	svc := dynamodb.New(session)
+	input := &dynamodb.GetItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"UserId": {
+				S: aws.String(user.Id.Hex()),
+			},
+		},
+		TableName: aws.String(randStateTable),
+	}
+
+	item, err := svc.GetItem(input)
 
 	if err != nil {
 		fmt.Println("fetch rand state error", err)
 		return internalErrorhandler()
 	}
 
-	if randState.State != request.QueryStringParameters["state"] {
+	if *item.Item["Randstate"].S != request.QueryStringParameters["state"] {
 		return authErrorhandler("rand state error")
 	}
 

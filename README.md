@@ -28,6 +28,8 @@
 * [Go](https://go.dev/)
 * [Aws-Lambda](https://aws.amazon.com/lambda/)
 * [MongoDB](https://www.mongodb.com/docs/drivers/go/current/)
+* [Aws-DynamoDB](https://ap-southeast-1.console.aws.amazon.com/dynamodbv2/)
+* [Aws-SQS](https://ap-southeast-1.console.aws.amazon.com/sqs/v2/home)
 
 <!-- LICENSE -->
 ## License
