@@ -69,9 +69,6 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},
-		MultiValueHeaders: map[string][]string{
-			"set-cookie": nil,
-		},
 	}
 
 	accessTokenExpireTime, _ := strconv.Atoi(os.Getenv("ACCESS_TOKEN_EXPIRATION_TIME"))
