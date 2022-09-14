@@ -69,15 +69,16 @@ var fakeData = []bson.M{
 
 var _ = Describe("Fetchentries", func() {
 	var fakeRequest events.APIGatewayV2HTTPRequest
-	ctx := context.WithValue(context.Background(), helper.ContextKeyUser, UserRepository.User{
-		Id:       fakeObjId,
-		Account:  "jjj",
-		Password: "123456",
-	})
+	var ctx context.Context
 
 	BeforeEach(func() {
 		ctrl := gomock.NewController(GinkgoT())
 		m := NewMockIRepository(ctrl)
+		ctx = context.WithValue(context.Background(), helper.ContextKeyUser, UserRepository.User{
+			Id:       fakeObjId,
+			Account:  "jjj",
+			Password: "123456",
+		})
 
 		container.Singleton(func() repositories.IRepository {
 			return m
@@ -99,10 +100,18 @@ var _ = Describe("Fetchentries", func() {
 			Expect(err).To(BeNil())
 		})
 
-		It("should panic for wrong query string format", func() {
+		It("should failed with wrong query string format", func() {
 			res, err := main.Handler(ctx, events.APIGatewayV2HTTPRequest{})
 			Expect(res.Body).To(Equal("request query error"))
 			Expect(res.StatusCode).To(Equal(400))
+			Expect(err).To(BeNil())
+		})
+
+		It("should failed for not logining in", func() {
+			ctx = context.TODO()
+			res, err := main.Handler(ctx, fakeRequest)
+			Expect(res.Body).To(Equal("please login in"))
+			Expect(res.StatusCode).To(Equal(401))
 			Expect(err).To(BeNil())
 		})
 	})
