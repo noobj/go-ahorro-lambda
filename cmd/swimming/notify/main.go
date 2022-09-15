@@ -7,16 +7,17 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 )
 
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	botId := os.Getenv("SWIM_NOTIFY_BOT_ID")
-	channelId := os.Getenv("SWIM_NOTIFY_CHANNEL_ID")
+	env := config.GetInstance()
+	botId := env.SwimNotifyBotId
+	channelId := env.SwimNotifyChannelId
 
 	content := url.QueryEscape("[溫腥提醒]各位奴才們，明天又到了一週最開心的週二看妹日囉😍，請別忘了 攜帶泳具👙，喵~")
 	requestURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s", botId, channelId, content)

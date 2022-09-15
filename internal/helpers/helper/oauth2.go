@@ -1,21 +1,16 @@
 package helper
 
 import (
-	"log"
-	"os"
-
-	"github.com/joho/godotenv"
+	"github.com/noobj/go-serverless-services/internal/config"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v2"
 )
 
 func GenerateOauthConfig() *oauth2.Config {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found", err)
-	}
-	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
-	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+	env := config.GetInstance()
+	googleClientId := env.GoogleClientId
+	googleClientSecret := env.GoogleClientSecret
 
 	return &oauth2.Config{
 		ClientID:     googleClientId,

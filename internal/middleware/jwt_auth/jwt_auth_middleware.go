@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/golobby/container/v3"
+	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	"github.com/noobj/go-serverless-services/internal/middleware"
 	"github.com/noobj/go-serverless-services/internal/repositories"
@@ -28,7 +28,8 @@ func Auth[T types.ApiRequest, R types.ApiResponse](f middleware.HandlerFunc[T, R
 			return helper.GenerateErrorResponse[R](401)
 		}
 
-		key := os.Getenv("ACCESS_TOKEN_SECRET")
+		env := config.GetInstance()
+		key := env.AccessTokenSecret
 		payload, err := helper.ExtractPayloadFromToken(key, cookiesMap["access_token"])
 		if err != nil {
 			return helper.GenerateErrorResponse[R](401)

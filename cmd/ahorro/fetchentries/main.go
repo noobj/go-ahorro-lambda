@@ -41,6 +41,11 @@ func checkTimeFormat(format string, timeString string) bool {
 }
 
 func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+	user, ok := helper.GetUserFromContext(ctx)
+	if !ok {
+		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
+	}
+
 	startFromQuery, startExist := request.QueryStringParameters["timeStart"]
 	endFromQuery, endExist := request.QueryStringParameters["timeEnd"]
 	// categoriesExcludeInput, cateExcludeExist := request.QueryStringParameters["categoriesExclude"]
@@ -69,11 +74,6 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	// }
 	var entryRepository repositories.IRepository
 	container.Resolve(&entryRepository)
-
-	user, ok := helper.GetUserFromContext(ctx)
-	if !ok {
-		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
-	}
 
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
 		{Key: "$expr", Value: bson.D{
@@ -129,7 +129,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 		var result AggregateResult
 		bson.Unmarshal(doc, &result)
-
+		fmt.Printf("%+v", result)
 		cateEntriesBundle := CategoryEntriesBundle{
 			Id:      result.Category[0].Id,
 			Sum:     result.Sum,

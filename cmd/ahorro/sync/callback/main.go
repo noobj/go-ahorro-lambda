@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -13,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golobby/container/v3"
+	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/repositories"
@@ -36,7 +36,9 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return authErrorhandler()
 	}
 
-	randStateTable := os.Getenv("DYNAMO_RAND_TABLE")
+	env := config.GetInstance()
+
+	randStateTable := env.DynamoRandTable
 	session, _ := session.NewSession()
 	svc := dynamodb.New(session)
 	input := &dynamodb.GetItemInput{

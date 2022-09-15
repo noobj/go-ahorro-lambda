@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 
 	"github.com/joho/godotenv"
+	"github.com/noobj/go-serverless-services/internal/config"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -24,10 +24,10 @@ func GetInstance() *mongo.Client {
 				if err := godotenv.Load(); err != nil {
 					log.Println("No .env file found")
 				}
-
-				mongoUser := os.Getenv("MONGO_USER")
-				mongoPassword := os.Getenv("MONGO_PASSWORD")
-				mongoPath := os.Getenv("MONGO_PATH")
+				env := config.GetInstance()
+				mongoUser := env.MongoUser
+				mongoPassword := env.MongoPassword
+				mongoPath := env.MongoPath
 				uri := fmt.Sprintf("mongodb+srv://%s:%s%s", mongoUser, mongoPassword, mongoPath)
 
 				cmdMonitor := &event.CommandMonitor{

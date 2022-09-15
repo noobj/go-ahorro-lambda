@@ -3,11 +3,13 @@ package main_test
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/golang/mock/gomock"
 	"github.com/golobby/container/v3"
+	"github.com/joho/godotenv"
 	main "github.com/noobj/go-serverless-services/cmd/ahorro/refresh"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	mockRepo "github.com/noobj/go-serverless-services/internal/repositories/mocks"
@@ -21,6 +23,9 @@ import (
 var fakeObjId, _ = primitive.ObjectIDFromHex("62badc82d420270009a51019")
 
 var _ = Describe("Refresh", func() {
+	if err := godotenv.Load("../../../.env.example"); err != nil {
+		log.Println("No .env file found", err)
+	}
 	var fakeRequest events.APIGatewayV2HTTPRequest
 
 	BeforeEach(func() {

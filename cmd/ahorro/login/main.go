@@ -4,15 +4,13 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/golobby/container/v3"
-	"github.com/joho/godotenv"
+	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
@@ -68,10 +66,6 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayV2HTTPResponse{Body: "account and password not match", StatusCode: 404}, nil
 	}
 
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found", err)
-	}
-
 	token, err := helper.GenerateAccessToken(user.Id.Hex())
 	if err != nil {
 		log.Println("Couldn't generate access token", err)
@@ -94,8 +88,9 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		},
 	}
 
-	accessTokenExpireTime, _ := strconv.Atoi(os.Getenv("ACCESS_TOKEN_EXPIRATION_TIME"))
-	refreshTokenExpireTime, _ := strconv.Atoi(os.Getenv("REFRESH_TOKEN_EXPIRATION_TIME"))
+	env := config.GetInstance()
+	accessTokenExpireTime := env.AccessTokenExpirationTime
+	refreshTokenExpireTime := env.RefreshTokenExpirationTime
 	cookieWithAccessTkn := http.Cookie{
 		Name:     "access_token",
 		Value:    token,

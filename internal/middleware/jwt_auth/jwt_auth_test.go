@@ -2,11 +2,13 @@ package jwt_auth_test
 
 import (
 	"context"
+	"log"
 	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/golang/mock/gomock"
 	"github.com/golobby/container/v3"
+	"github.com/joho/godotenv"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtAuth "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/repositories"
@@ -23,6 +25,9 @@ var fakeObjId, _ = primitive.ObjectIDFromHex("62badc82d420270009a51019")
 
 var _ = Describe("JwtAuth", func() {
 	var fakeRequest events.APIGatewayV2HTTPRequest
+	if err := godotenv.Load("../../../.env.example"); err != nil {
+		log.Println("No .env file found", err)
+	}
 	BeforeEach(func() {
 		fakeRequest = events.APIGatewayV2HTTPRequest{}
 		ctrl := gomock.NewController(GinkgoT())

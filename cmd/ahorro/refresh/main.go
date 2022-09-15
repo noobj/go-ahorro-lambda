@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/golobby/container/v3"
-	"github.com/joho/godotenv"
+	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
@@ -32,7 +30,9 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	if _, ok := cookiesMap["refresh_token"]; !ok {
 		return errorHandler(401)
 	}
-	key := os.Getenv("REFRESH_TOKEN_SECRET")
+
+	env := config.GetInstance()
+	key := env.RefreshTokenSecret
 	payload, err := helper.ExtractPayloadFromToken(key, cookiesMap["refresh_token"])
 	if err != nil {
 		return errorHandler(401)
@@ -49,12 +49,8 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	loginInfoRepository.FindOne(context.TODO(), bson.M{"refreshToken": cookiesMap["refresh_token"]}).Decode(&loginInfo)
 
 	if loginInfo.User.Hex() != userId {
-		fmt.Println(loginInfo.User.Hex(), userId)
+		fmt.Println("Didn't match or find the loginInfo user", loginInfo.User.Hex(), userId)
 		return errorHandler(401)
-	}
-
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found", err)
 	}
 
 	token, err := helper.GenerateAccessToken(userId)
@@ -66,12 +62,13 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	resp := events.APIGatewayV2HTTPResponse{
 		StatusCode:      200,
 		IsBase64Encoded: false,
+		Body:            "refreshed",
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},
 	}
 
-	accessTokenExpireTime, _ := strconv.Atoi(os.Getenv("ACCESS_TOKEN_EXPIRATION_TIME"))
+	accessTokenExpireTime := env.AccessTokenExpirationTime
 	cookieWithAccessTkn := http.Cookie{
 		Name:     "access_token",
 		Value:    token,

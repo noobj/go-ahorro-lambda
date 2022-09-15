@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golobby/container/v3"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/repositories"
@@ -32,12 +32,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](401)
 	}
 
-	var env Specification
-	err := envconfig.Process("", &env)
-	if err != nil {
-		log.Println("Parse env error:", err)
-		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500)
-	}
+	env := config.GetInstance()
 
 	config := helper.GenerateOauthConfig()
 
@@ -74,7 +69,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		TableName: aws.String(randStateTable),
 	}
 
-	_, err = svc.PutItem(input)
+	_, err := svc.PutItem(input)
 
 	if err != nil {
 		log.Printf("Dynamo error: %v", err)

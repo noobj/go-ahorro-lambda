@@ -3,10 +3,12 @@ package main_test
 import (
 	"bytes"
 	"context"
+	"log"
 	"mime/multipart"
 	"os"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/joho/godotenv"
 	main "github.com/noobj/go-serverless-services/cmd/ahorro/login"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -27,6 +29,9 @@ var fakeUserDoc = bson.M{"_id": fakeObjId, "account": "jjj", "password": "$2b$10
 var _ = Describe("Login", func() {
 	var fakeRequest events.APIGatewayProxyRequest
 
+	if err := godotenv.Load("../../../.env.example"); err != nil {
+		log.Println("No .env file found", err)
+	}
 	BeforeEach(func() {
 		fakeRequest = events.APIGatewayProxyRequest{
 			Headers: make(map[string]string),

@@ -1,15 +1,14 @@
 package helper
 
 import (
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/types"
 )
 
-func GenerateJwtToken(payload interface{}, expiredTime int, secret string) (string, error) {
+func GenerateJwtToken(payload interface{}, expiredTime int64, secret string) (string, error) {
 	expiresAt := time.Now().Add(time.Duration(expiredTime) * time.Second).Unix()
 	claims := types.MyCustomClaims{
 		Payload: payload,
@@ -24,13 +23,9 @@ func GenerateJwtToken(payload interface{}, expiredTime int, secret string) (stri
 }
 
 func GenerateAccessToken(userId string) (string, error) {
-	accessTokenExpireTime, err := strconv.Atoi(os.Getenv("ACCESS_TOKEN_EXPIRATION_TIME"))
-	accessTokenSecret := os.Getenv("ACCESS_TOKEN_SECRET")
-	if err != nil {
-		return "", err
-	}
+	env := config.GetInstance()
 
-	token, err := GenerateJwtToken(userId, accessTokenExpireTime, accessTokenSecret)
+	token, err := GenerateJwtToken(userId, env.AccessTokenExpirationTime, env.AccessTokenSecret)
 	if err != nil {
 		return "", err
 	}
@@ -39,13 +34,8 @@ func GenerateAccessToken(userId string) (string, error) {
 }
 
 func GenerateRefreshToken(userId string) (string, error) {
-	refreshTokenExpireTime, err := strconv.Atoi(os.Getenv("REFRESH_TOKEN_EXPIRATION_TIME"))
-	refreshTokenSecret := os.Getenv("REFRESH_TOKEN_SECRET")
-	if err != nil {
-		return "", err
-	}
-
-	token, err := GenerateJwtToken(userId, refreshTokenExpireTime, refreshTokenSecret)
+	env := config.GetInstance()
+	token, err := GenerateJwtToken(userId, env.RefreshTokenExpirationTime, env.RefreshTokenSecret)
 	if err != nil {
 		return "", err
 	}

@@ -6,9 +6,9 @@ import (
 	"log"
 	"os"
 	"reflect"
-	"strconv"
 
 	"github.com/joho/godotenv"
+	"github.com/noobj/go-serverless-services/internal/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,9 +20,11 @@ func main() {
 		log.Println("No .env file found")
 	}
 
-	mongoUser := os.Getenv("MONGO_USER")
-	mongoPassword := os.Getenv("MONGO_PASSWORD")
-	mongoPath := os.Getenv("MONGO_PATH")
+	env := config.GetInstance()
+
+	mongoUser := env.MongoUser
+	mongoPassword := env.MongoPassword
+	mongoPath := env.MongoPath
 	uri := fmt.Sprintf("mongodb+srv://%s:%s%s", mongoUser, mongoPassword, mongoPath)
 
 	cmdMonitor := &event.CommandMonitor{
@@ -47,7 +49,8 @@ func main() {
 }
 
 func createLoginInfosCreatedAtTTLIndex(client *mongo.Client) {
-	refreshTokenExpireTime, _ := strconv.Atoi(os.Getenv("REFRESH_TOKEN_EXPIRATION_TIME"))
+	env := config.GetInstance()
+	refreshTokenExpireTime := env.RefreshTokenExpirationTime
 	col := client.Database("ahorro").Collection("loginInfos")
 	mod := mongo.IndexModel{
 		Keys: bson.M{
