@@ -104,11 +104,5 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 }
 
 func main() {
-	userRepo := UserRepository.New()
-	defer userRepo.Disconnect()()
-	container.NamedSingleton("UserRepo", func() repositories.IRepository {
-		return userRepo
-	})
-
 	lambda.Start(jwtMiddleWare.Auth(Handler))
 }

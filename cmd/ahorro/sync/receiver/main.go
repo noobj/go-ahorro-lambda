@@ -12,12 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
-	"github.com/noobj/go-serverless-services/internal/repositories"
-	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"golang.org/x/oauth2"
 	drive "google.golang.org/api/drive/v3"
 )
@@ -110,11 +107,5 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 }
 
 func main() {
-	userRepo := UserRepository.New()
-	defer userRepo.Disconnect()()
-	container.NamedSingleton("UserRepo", func() repositories.IRepository {
-		return userRepo
-	})
-
 	lambda.Start(jwtMiddleWare.Auth(Handler))
 }

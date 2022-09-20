@@ -141,7 +141,7 @@ resources:
         AttributeDefinitions:
           -
             AttributeName: UserId
-            AttributeType: SGkjjjjjjjjjjjj
+            AttributeType: S
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5

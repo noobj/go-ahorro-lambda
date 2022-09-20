@@ -5,47 +5,19 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/golobby/container/v3"
-	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
-	"github.com/noobj/go-serverless-services/internal/middleware"
-	"github.com/noobj/go-serverless-services/internal/repositories"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
-	"github.com/noobj/go-serverless-services/internal/types"
+	"github.com/noobj/jwtmiddleware"
+	"github.com/noobj/jwtmiddleware/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func Auth[T types.ApiRequest, R types.ApiResponse](f middleware.HandlerFunc[T, R]) middleware.HandlerFunc[T, R] {
-	return func(ctx context.Context, r T) (R, error) {
-		v2Request, ok := any(r).(events.APIGatewayV2HTTPRequest)
-		if !ok {
-			return helper.GenerateErrorResponse[R](401)
-		}
-		cookiesMap := helper.ParseCookie(v2Request.Cookies)
-		if _, ok := cookiesMap["access_token"]; !ok {
-			return helper.GenerateErrorResponse[R](401)
-		}
-
-		env := config.GetInstance()
-		key := env.AccessTokenSecret
-		payload, err := helper.ExtractPayloadFromToken(key, cookiesMap["access_token"])
-		if err != nil {
-			return helper.GenerateErrorResponse[R](401)
-		}
-		user, err := getUserForPayload(payload)
-		if err != nil {
-			return helper.GenerateErrorResponse[R](401)
-		}
-
-		ctxWithUser := context.WithValue(ctx, helper.ContextKeyUser, *user)
-
-		return f(ctxWithUser, any(v2Request).(T))
-	}
+func Auth[T types.ApiRequest, R types.ApiResponse](f types.HandlerFunc[T, R]) types.HandlerFunc[T, R] {
+	return jwtmiddleware.Handle(f, payloadHandler)
 }
 
-func getUserForPayload(payload interface{}) (*UserRepository.User, error) {
+func payloadHandler(ctx context.Context, payload interface{}) (context.Context, error) {
 	userId, ok := payload.(string)
 	userObjId, _ := primitive.ObjectIDFromHex(userId)
 	if !ok {
@@ -53,14 +25,17 @@ func getUserForPayload(payload interface{}) (*UserRepository.User, error) {
 		return nil, fmt.Errorf("wrong payload format")
 	}
 
-	var userRepository repositories.IRepository
-	container.NamedResolve(&userRepository, "UserRepo")
+	userRepo := UserRepository.New()
+	defer userRepo.Disconnect()()
 	var user UserRepository.User
-	err := userRepository.FindOne(context.TODO(), bson.M{"_id": userObjId}).Decode(&user)
+
+	err := userRepo.FindOne(context.TODO(), bson.M{"_id": userObjId}).Decode(&user)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 
-	return &user, nil
+	ctx = context.WithValue(ctx, helper.ContextKeyUser, user)
+
+	return ctx, nil
 }

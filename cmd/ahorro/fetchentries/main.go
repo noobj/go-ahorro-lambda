@@ -12,7 +12,6 @@ import (
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
-	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -164,9 +163,6 @@ func main() {
 
 	container.Singleton(func() repositories.IRepository {
 		return entryRepo
-	})
-	container.NamedSingleton("UserRepo", func() repositories.IRepository {
-		return UserRepository.New()
 	})
 
 	lambda.Start(jwtMiddleWare.Auth(Handler))
