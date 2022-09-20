@@ -40,6 +40,24 @@ jobs:
         COVERALLS_TOKEN: ${{ secrets.COVERALLS }}
       run: goveralls -coverprofile=coverprofile.out
 
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+
+  push_notification_tg:
+    needs: [test, build]
+    runs-on: ubuntu-latest
+
+    steps:
     - name: send telegram message when failed
       if: failure()
       uses: appleboy/telegram-action@master
@@ -61,17 +79,4 @@ jobs:
           ${{ github.actor }}
           Nisu, looking sharp 👍
           Commit : ${{ github.event.commits[0].message }}
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Build
-      run: go build -v ./...
-
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: 1.18
 
