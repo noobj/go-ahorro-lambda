@@ -10,6 +10,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    outputs:
+      flag: ${{ steps.set-flag.outputs.flag }}
     steps:
     - uses: actions/checkout@v3
 
@@ -39,9 +41,15 @@ jobs:
       env:
         COVERALLS_TOKEN: ${{ secrets.COVERALLS }}
       run: goveralls -coverprofile=coverprofile.out
-
+      
+    - name: Set flag to failed
+      if: failure()
+      id: set-flag
+      run: echo "::set-output name=flag::true"
   build:
     runs-on: ubuntu-latest
+    outputs:
+      flag: ${{ steps.set-flag.outputs.flag }}
     steps:
     - uses: actions/checkout@v3
 
@@ -52,6 +60,11 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: 1.18
+        
+    - name: Set flag to failed
+      if: failure()
+      id: set-flag
+      run: echo "::set-output name=flag::true"
 
   push_notification_tg:
     needs:
@@ -59,10 +72,9 @@ jobs:
       - build
     runs-on: ubuntu-latest
     if: always()
-
     steps:
     - name: send telegram message when failed
-      if: failure()
+      if: ${{needs.test.outputs.flag == 'true' || needs.build.outputs.flag == 'true' }}
       uses: appleboy/telegram-action@master
       with:
         to: ${{ secrets.TELEGRAM_TO }}
@@ -73,7 +85,7 @@ jobs:
           Commit : ${{ github.event.commits[0].message }}
           ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     - name: send telegram message when success
-      if: success()
+      if: ${{ !contains(needs.test.outputs.flag, 'true') }}
       uses: appleboy/telegram-action@master
       with:
         to: ${{ secrets.TELEGRAM_TO }}
