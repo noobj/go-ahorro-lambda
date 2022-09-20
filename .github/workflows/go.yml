@@ -20,7 +20,6 @@ jobs:
 
     - name: Install tools
       run: |
-        go get go.mongodb.org/mongo-driver/x/mongo/driver/ocsp@v1.9.1
         go get github.com/golang/mock/mockgen@v1.6.0
         go install github.com/golang/mock/mockgen
         go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
@@ -29,7 +28,9 @@ jobs:
       run: go generate -x ./...
 
     - name: Test
-      run: ginkgo --cover ./...
+      run: |
+        go get go.mongodb.org/mongo-driver/x/mongo/driver/ocsp@v1.9.1
+        ginkgo --cover ./...
 
     - name: Install goveralls
       run: go install github.com/mattn/goveralls@latest
