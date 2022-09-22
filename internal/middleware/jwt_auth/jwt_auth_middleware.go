@@ -26,7 +26,6 @@ func payloadHandler(ctx context.Context, payload interface{}) (context.Context, 
 	}
 
 	userRepo := UserRepository.New()
-	defer userRepo.Disconnect()()
 	var user UserRepository.User
 
 	err := userRepo.FindOne(context.TODO(), bson.M{"_id": userObjId}).Decode(&user)

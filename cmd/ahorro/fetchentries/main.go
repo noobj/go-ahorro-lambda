@@ -102,7 +102,9 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 			}}},
 		},
 		{Key: "sum", Value: bson.D{{
-			Key: "$sum", Value: "$amount"},
+			Key: "$sum", Value: bson.M{
+				"$toDecimal": "$amount",
+			}},
 		}},
 	},
 	}}
@@ -122,7 +124,6 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	repoResults := entryRepository.Aggregate([]bson.D{matchStage, sortStage, groupStage, sortSumStage, lookupStage})
 	var categories []CategoryEntriesBundle
 	total := 0
-
 	for _, repoResult := range repoResults {
 		doc, _ := bson.Marshal(repoResult)
 
