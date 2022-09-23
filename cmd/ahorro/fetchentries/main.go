@@ -20,13 +20,13 @@ type Response events.APIGatewayProxyResponse
 
 type AggregateResult struct {
 	Entries  []AhorroRepository.Entry
-	Sum      int
+	Sum      float32
 	Category []AhorroRepository.Category
 }
 
 type CategoryEntriesBundle struct {
-	Id         primitive.ObjectID       `json:"_id"`
-	Sum        int                      `json:"sum"`
+	Id         primitive.ObjectID       `json:"_id" bson:"_id"`
+	Sum        float32                  `json:"sum"`
 	Percentage string                   `json:"percentage"`
 	Name       string                   `json:"name"`
 	Entries    []AhorroRepository.Entry `json:"entries"`
@@ -103,7 +103,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		},
 		{Key: "sum", Value: bson.D{{
 			Key: "$sum", Value: bson.M{
-				"$toDecimal": "$amount",
+				"$toDouble": "$amount",
 			}},
 		}},
 	},
@@ -123,13 +123,19 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	repoResults := entryRepository.Aggregate([]bson.D{matchStage, sortStage, groupStage, sortSumStage, lookupStage})
 	var categories []CategoryEntriesBundle
-	total := 0
+	total := float32(0.0)
 	for _, repoResult := range repoResults {
+		fmt.Printf("%+v", repoResult)
 		doc, _ := bson.Marshal(repoResult)
 
 		var result AggregateResult
-		bson.Unmarshal(doc, &result)
-		fmt.Printf("%+v", result)
+		err := bson.Unmarshal(doc, &result)
+
+		if err != nil {
+			fmt.Println("Unmarshall error: ", err)
+			return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500)
+		}
+
 		cateEntriesBundle := CategoryEntriesBundle{
 			Id:      result.Category[0].Id,
 			Sum:     result.Sum,
@@ -149,7 +155,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	resultForReturn := struct {
 		Categories []CategoryEntriesBundle `json:"categories"`
-		Total      int                     `json:"total"`
+		Total      float32                 `json:"total"`
 	}{
 		Categories: categories,
 		Total:      total,
