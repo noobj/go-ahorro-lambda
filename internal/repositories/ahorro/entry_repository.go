@@ -9,11 +9,11 @@ import (
 
 type Entry struct {
 	Id       primitive.ObjectID `json:"_id" bson:"_id"`
-	Amount   string             `json:"amount" bson:"amount"`
+	Amount   float32            `json:"amount" bson:"amount"`
 	Date     string             `json:"date"`
 	Descr    string             `json:"descr"`
-	Category primitive.ObjectID `json:"category" bson:"category,omitempty"`
-	User     primitive.ObjectID `json:"user" bson:"user,omitempty"`
+	Category primitive.ObjectID `json:"category,omitempty" bson:"category,omitempty"`
+	User     primitive.ObjectID `json:"user,omitempty" bson:"user,omitempty"`
 }
 
 type Category struct {

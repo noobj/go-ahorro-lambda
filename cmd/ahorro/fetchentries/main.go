@@ -18,19 +18,26 @@ import (
 
 type Response events.APIGatewayProxyResponse
 
+type Entry struct {
+	Id     primitive.ObjectID `json:"_id" bson:"_id"`
+	Amount float32            `json:"amount" bson:"amount"`
+	Date   string             `json:"date"`
+	Descr  string             `json:"descr"`
+}
+
 type AggregateResult struct {
-	Entries  []AhorroRepository.Entry
+	Entries  []Entry
 	Sum      float32
 	Category []AhorroRepository.Category
 }
 
 type CategoryEntriesBundle struct {
-	Id         primitive.ObjectID       `json:"_id" bson:"_id"`
-	Sum        float32                  `json:"sum"`
-	Percentage string                   `json:"percentage"`
-	Name       string                   `json:"name"`
-	Entries    []AhorroRepository.Entry `json:"entries"`
-	Color      string                   `json:"color"`
+	Id         primitive.ObjectID `json:"_id" bson:"_id"`
+	Sum        float32            `json:"sum"`
+	Percentage string             `json:"percentage"`
+	Name       string             `json:"name"`
+	Entries    []Entry            `json:"entries"`
+	Color      string             `json:"color"`
 }
 
 func checkTimeFormat(format string, timeString string) bool {
@@ -127,10 +134,8 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	for _, repoResult := range repoResults {
 		fmt.Printf("%+v", repoResult)
 		doc, _ := bson.Marshal(repoResult)
-
 		var result AggregateResult
 		err := bson.Unmarshal(doc, &result)
-
 		if err != nil {
 			fmt.Println("Unmarshall error: ", err)
 			return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500)

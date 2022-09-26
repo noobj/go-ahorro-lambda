@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -205,8 +206,14 @@ func collateCategoryItems(categoryItems []CategoryItem, userId primitive.ObjectI
 func collateEntryItems(entryItems []EntryItem, cateIdMap map[string]primitive.ObjectID, userId primitive.ObjectID) []interface{} {
 	var result []interface{}
 	for _, entryItem := range entryItems {
+		amount, err := strconv.ParseFloat(entryItem.Amount, 32)
+		if err != nil {
+			log.Println("Collating entries failed:", err)
+			panic("Collating entries failed")
+		}
+
 		newItemBson := bson.M{
-			"amount":   entryItem.Amount,
+			"amount":   amount,
 			"date":     entryItem.Date,
 			"descr":    entryItem.Descr,
 			"category": cateIdMap[entryItem.CategoryId],

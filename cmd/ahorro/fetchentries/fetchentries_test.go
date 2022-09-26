@@ -93,7 +93,7 @@ var _ = Describe("Fetchentries", func() {
 
 	Context("when handler return expected json response", func() {
 		It("should pass", func() {
-			expectedRes := "{\"categories\":[{\"_id\":\"62badc82d420270009a51019\",\"sum\":110,\"percentage\":\"0.55\",\"name\":\"Food\",\"entries\":[{\"_id\":\"62badc82d420270009a51019\",\"amount\":110,\"date\":\"2022-01-05\",\"descr\":\"fuck\",\"category\":\"62badc82d420270009a51019\",\"user\":\"62badc82d420270009a51019\"}],\"color\":\"#a4e56c\"},{\"_id\":\"62badc82d420270009a51019\",\"sum\":90,\"percentage\":\"0.45\",\"name\":\"Abc\",\"entries\":[{\"_id\":\"62badc82d420270009a51019\",\"amount\":90,\"date\":\"2022-01-05\",\"descr\":\"fuck\",\"category\":\"62badc82d420270009a51019\",\"user\":\"62badc82d420270009a51019\"}],\"color\":\"#a4e51c\"}],\"total\":200}"
+			expectedRes := "{\"categories\":[{\"_id\":\"62badc82d420270009a51019\",\"sum\":110,\"percentage\":\"0.55\",\"name\":\"Food\",\"entries\":[{\"_id\":\"62badc82d420270009a51019\",\"amount\":110,\"date\":\"2022-01-05\",\"descr\":\"fuck\"}],\"color\":\"#a4e56c\"},{\"_id\":\"62badc82d420270009a51019\",\"sum\":90,\"percentage\":\"0.45\",\"name\":\"Abc\",\"entries\":[{\"_id\":\"62badc82d420270009a51019\",\"amount\":90,\"date\":\"2022-01-05\",\"descr\":\"fuck\"}],\"color\":\"#a4e51c\"}],\"total\":200}"
 			res, err := main.Handler(ctx, fakeRequest)
 			fmt.Printf("%+v", res.Body)
 			Expect(res.Body).To(Equal(expectedRes))
