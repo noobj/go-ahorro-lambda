@@ -148,6 +148,9 @@ resources:
         KeySchema:
           - AttributeName: UserId
             KeyType: HASH
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
         TableName:
           Fn::Join:
             - "-"

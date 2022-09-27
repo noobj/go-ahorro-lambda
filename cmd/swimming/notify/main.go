@@ -18,8 +18,13 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	env := config.GetInstance()
 	botId := env.SwimNotifyBotId
 	channelId := env.SwimNotifyChannelId
+	message, messageExist := request.QueryStringParameters["message"]
 
 	content := url.QueryEscape("[溫腥提醒]各位奴才們，明天又到了一週最開心的週二看妹日囉😍，請別忘了 攜帶泳具👙，喵~")
+
+	if messageExist {
+		content = url.QueryEscape(message)
+	}
 	requestURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s", botId, channelId, content)
 
 	res, err := http.Get(requestURL)
