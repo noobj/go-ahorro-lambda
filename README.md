@@ -23,6 +23,9 @@
 
 * Integrating the backend services, including Ahorro and SwimCrowd.
 
+### Synchronizing Work Flow
+<img src="./sync_workflow.png">
+
 ### Built With
 
 * [Go](https://go.dev/)
