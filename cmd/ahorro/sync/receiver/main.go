@@ -11,8 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/google/uuid"
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
@@ -88,48 +86,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return helper.GenerateApiResponse[events.APIGatewayProxyResponse](authURL)
 	}
 
-	message := sqs.SendMessageInput{
-		DelaySeconds: aws.Int64(10),
-		MessageAttributes: map[string]*sqs.MessageAttributeValue{
-			"UserId": {
-				DataType:    aws.String("String"),
-				StringValue: aws.String(user.Id.Hex()),
-			},
-		},
-		MessageBody: aws.String("Sync ahorro entries with latest backup file"),
-	}
-	_, err = helper.SendSqsMessage(&message)
-	if err != nil {
-		log.Println("sending sqs error: ", err)
-		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500)
-	}
-
-	dynamoTaskTable := env.DynamoTaskTable
-	fmt.Printf("+%v", dynamoTaskTable)
-	taskId := uuid.New()
-	input = &dynamodb.PutItemInput{
-		Item: map[string]*dynamodb.AttributeValue{
-			"TaskId": {
-				S: aws.String(taskId.String()),
-			},
-			"Completed": {
-				BOOL: aws.Bool(false),
-			},
-			"ttl": {
-				N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Minute*10).Unix())),
-			},
-		},
-		TableName: aws.String(dynamoTaskTable),
-	}
-
-	_, err = svc.PutItem(input)
-
-	if err != nil {
-		log.Printf("Dynamo Insert TaskId Error: %v", err)
-		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500)
-	}
-
-	return helper.GenerateApiResponse[events.APIGatewayProxyResponse](taskId)
+	return helper.SyncTasks(user.Id.Hex())
 }
 
 func main() {

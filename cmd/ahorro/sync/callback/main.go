@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
@@ -84,23 +83,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return internalErrorhandler()
 	}
 
-	message := sqs.SendMessageInput{
-		DelaySeconds: aws.Int64(10),
-		MessageAttributes: map[string]*sqs.MessageAttributeValue{
-			"UserId": {
-				DataType:    aws.String("String"),
-				StringValue: aws.String(user.Id.String()),
-			},
-		},
-		MessageBody: aws.String("Sync ahorro entries with latest backup file"),
-	}
-	_, err = helper.SendSqsMessage(&message)
-	if err != nil {
-		log.Println("sending sqs error: ", err)
-		return internalErrorhandler()
-	}
-
-	return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("ok")
+	return helper.SyncTasks(user.Id.Hex())
 }
 
 func main() {
