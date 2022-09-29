@@ -22,6 +22,7 @@ provider:
     REFRESH_TOKEN_SECRET: ${ssm:/lambda/ahorro/prod/JWT_REFRESH_TOKEN_SECRET}
     TZ: Asia/Taipei
     DYNAMO_RAND_TABLE: AhorroUserRandstate-${self:custom.stage}
+    DYNAMO_TASK_TABLE: AhorroTaskStatus-${self:custom.stage}
     SQS_URL:
       Ref: AhorroSyncQueue
   iamRoleStatements:
@@ -155,4 +156,25 @@ resources:
           Fn::Join:
             - "-"
             - - AhorroUserRandstate
+              - ${self:custom.stage}
+    AhorroDynamoTaskStatus:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: TaskId
+            AttributeType: S
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        KeySchema:
+          - AttributeName: TaskId
+            KeyType: HASH
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        TableName:
+          Fn::Join:
+            - "-"
+            - - AhorroTaskStatus
               - ${self:custom.stage}

@@ -23,6 +23,7 @@ type Specification struct {
 	SwimNotifyBotId            string `required:"true" split_words:"true"`
 	SwimNotifyChannelId        string `required:"true" split_words:"true"`
 	DynamoRandTable            string `required:"true" split_words:"true"`
+	DynamoTaskTable            string `required:"true" split_words:"true"`
 }
 
 var specInstance *Specification
