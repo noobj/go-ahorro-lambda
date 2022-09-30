@@ -18,10 +18,6 @@ import (
 	drive "google.golang.org/api/drive/v3"
 )
 
-type Specification struct {
-	DynamoRandTable string `required:"true" split_words:"true"`
-}
-
 func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	user, ok := helper.GetUserFromContext(ctx)
 	if !ok {

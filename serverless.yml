@@ -121,7 +121,7 @@ functions:
     package:
       include:
         - bin/sync_callback
-  sync_hanlder:
+  sync_handler:
     handler: bin/sync_handler
     events:
       - sqs:
@@ -132,6 +132,15 @@ functions:
     package:
       include:
         - bin/sync_handler
+  sync_checker:
+    handler: bin/sync_checker
+    events:
+      - httpApi:
+          path: /sync/check
+          method: get
+    package:
+      include:
+        - bin/sync_checker
 resources:
   Resources:
     AhorroSyncQueue:

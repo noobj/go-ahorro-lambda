@@ -37,7 +37,6 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	env := config.GetInstance()
 
-	randStateTable := env.DynamoRandTable
 	session, _ := session.NewSession()
 	svc := dynamodb.New(session)
 	input := &dynamodb.GetItemInput{
@@ -46,7 +45,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 				S: aws.String(user.Id.Hex()),
 			},
 		},
-		TableName: aws.String(randStateTable),
+		TableName: aws.String(env.DynamoRandTable),
 	}
 
 	item, err := svc.GetItem(input)
