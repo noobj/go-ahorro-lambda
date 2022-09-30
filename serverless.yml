@@ -5,7 +5,7 @@ plugins:
 frameworkVersion: '3'
 
 custom:
-  stage: ${opt:stage, 'dev'}
+  stage: dev
 
 provider:
   name: aws
@@ -38,6 +38,13 @@ provider:
         - "dynamodb:PutItem"
       Resource:
         - !GetAtt AhorroDynamoRandstate.Arn
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:UpdateItem"
+      Resource:
+        - !GetAtt AhorroDynamoTaskStatus.Arn
 package:
   individually: true
   exclude:

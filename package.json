@@ -3,7 +3,7 @@
     "description": "To run the golanf lambda service locally",
     "version": "1.0.0",
     "scripts": {
-        "start": "SLS_DEBUG=* node ./node_modules/.bin/serverless offline --host 0.0.0.0 start --useDocker",
+        "start": "SLS_DEBUG=* node ./node_modules/.bin/serverless offline --host 0.0.0.0 start --useDocker --stage jjj",
         "watch": "nodemon --watch ./ -e go --exec make build -j",
         "watch_swim": "nodemon --watch ./ -e go --exec make swimbuild",
         "test": "ginkgo ./..."

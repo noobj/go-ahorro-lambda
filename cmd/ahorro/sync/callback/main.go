@@ -83,7 +83,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return internalErrorhandler()
 	}
 
-	return helper.SyncTasks(user.Id.Hex())
+	return helper.PushSyncRequest(user.Id.Hex())
 }
 
 func main() {
