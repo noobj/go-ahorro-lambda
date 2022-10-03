@@ -52,7 +52,8 @@ type CategoryItem struct {
 	Name string
 }
 
-var internalErrorhandler = func(message ...string) (events.APIGatewayProxyResponse, error) {
+var internalErrorhandler = func(taskId string, message ...string) (events.APIGatewayProxyResponse, error) {
+	helper.UpdateTaskStatus(taskId, helper.Failed)
 	return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500, message...)
 }
 
@@ -64,117 +65,127 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 	var entryRepository repositories.IRepository
 	container.NamedResolve(&entryRepository, "EntryRepo")
 
-	userId := *event.Records[0].MessageAttributes["UserId"].StringValue
-	var user UserRepository.User
-	userObjectId, _ := primitive.ObjectIDFromHex(userId)
-	err := userRepository.FindOne(context.TODO(), bson.M{"_id": userObjectId}).Decode(&user)
-	if err != nil {
-		log.Println(err)
-		return internalErrorhandler("error: user not found")
-	}
-	config := helper.GenerateOauthConfig()
+	for _, record := range event.Records {
+		userId := *record.MessageAttributes["UserId"].StringValue
+		taskId := *record.MessageAttributes["TaskId"].StringValue
 
-	token := oauth2.Token{
-		TokenType:    "Bearer",
-		AccessToken:  user.GoogleAccessToken,
-		RefreshToken: user.GoogleRefreshToken,
-		// TODO: use real value
-		Expiry: time.Now().Add(time.Hour * -2),
-	}
+		log.Printf("Start Syncing task %s", taskId)
+		var user UserRepository.User
+		userObjectId, _ := primitive.ObjectIDFromHex(userId)
+		err := userRepository.FindOne(context.TODO(), bson.M{"_id": userObjectId}).Decode(&user)
+		if err != nil {
+			log.Println(err)
+			return internalErrorhandler(taskId, "error: user not found")
+		}
+		oauthConfig := helper.GenerateOauthConfig()
 
-	client := config.Client(ctx, &token)
-	service, _ := drive.New(client)
-
-	file, err := service.Files.List().Q("name contains 'ahorro'").OrderBy("createdTime desc").PageSize(1).Do()
-
-	if err != nil {
-		log.Printf("google service error: %v", err)
-		return internalErrorhandler("error: google service error")
-	}
-
-	fileId := file.Files[0].Id
-
-	content, err := service.Files.Get(fileId).Download()
-
-	if err != nil {
-		log.Printf("google service error: %v", err)
-		return internalErrorhandler("error: google service error")
-	}
-
-	buff := make([]byte, 10)
-	var tmp []string
-
-	for {
-		n, err := content.Body.Read(buff)
-		if err == io.EOF {
-			break
+		token := oauth2.Token{
+			TokenType:    "Bearer",
+			AccessToken:  user.GoogleAccessToken,
+			RefreshToken: user.GoogleRefreshToken,
+			// TODO: use real value
+			Expiry: time.Now().Add(time.Hour * -2),
 		}
 
-		tmp = append(tmp, string(buff[:n]))
-	}
+		client := oauthConfig.Client(ctx, &token)
+		service, _ := drive.New(client)
 
-	var ahorroRes AhorroRes
-	json.Unmarshal([]byte(strings.Join(tmp, "")), &ahorroRes)
-	var entryItems []EntryItem
-	var categoryItems []CategoryItem
-	for _, table := range ahorroRes.Tables {
-		if table.TableName == "expense" {
-			err = mapstructure.Decode(table.Items, &entryItems)
-			if err != nil {
-				log.Println("Json format error in the expense sector", err)
-				return internalErrorhandler()
+		file, err := service.Files.List().Q("name contains 'ahorro'").OrderBy("createdTime desc").PageSize(1).Do()
+
+		if err != nil {
+			log.Printf("google service error: %v", err)
+			return internalErrorhandler(taskId, "error: google service error")
+		}
+
+		fileId := file.Files[0].Id
+
+		content, err := service.Files.Get(fileId).Download()
+
+		if err != nil {
+			log.Printf("google service error: %v", err)
+			return internalErrorhandler(taskId, "error: google service error")
+		}
+
+		buff := make([]byte, 10)
+		var tmp []string
+
+		for {
+			n, err := content.Body.Read(buff)
+			if err == io.EOF {
+				break
+			}
+
+			tmp = append(tmp, string(buff[:n]))
+		}
+
+		var ahorroRes AhorroRes
+		json.Unmarshal([]byte(strings.Join(tmp, "")), &ahorroRes)
+		var entryItems []EntryItem
+		var categoryItems []CategoryItem
+		for _, table := range ahorroRes.Tables {
+			if table.TableName == "expense" {
+				err = mapstructure.Decode(table.Items, &entryItems)
+				if err != nil {
+					log.Println("Json format error in the expense sector", err)
+					return internalErrorhandler(taskId)
+				}
+			}
+
+			if table.TableName == "category" {
+				err = mapstructure.Decode(table.Items, &categoryItems)
+				if err != nil {
+					log.Println("Json format error in the category sector", err)
+					return internalErrorhandler(taskId)
+				}
 			}
 		}
 
-		if table.TableName == "category" {
-			err = mapstructure.Decode(table.Items, &categoryItems)
+		err = mongodb.GetInstance().UseSession(ctx, func(sc mongo.SessionContext) error {
+			err := sc.StartTransaction()
 			if err != nil {
-				log.Println("Json format error in the category sector", err)
-				return internalErrorhandler()
+				return err
 			}
+
+			_, err = categoryRepository.DeleteMany(sc, bson.M{"user": userObjectId})
+			if err != nil {
+				return err
+			}
+
+			categoriesForInsert, newCategoryIdMap := collateCategoryItems(categoryItems, userObjectId)
+
+			if _, err = categoryRepository.InsertMany(sc, categoriesForInsert); err != nil {
+				return err
+			}
+
+			if _, err = entryRepository.DeleteMany(sc, bson.M{"user": userObjectId}); err != nil {
+				return err
+			}
+
+			entriesForInsert := collateEntryItems(entryItems, newCategoryIdMap, userObjectId)
+			_, err = entryRepository.InsertMany(sc, entriesForInsert)
+
+			if err != nil {
+				return err
+			}
+
+			if err = sc.CommitTransaction(sc); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			log.Println("Something wrong in Transaction", err)
+			return internalErrorhandler(taskId)
+		}
+
+		helper.UpdateTaskStatus(taskId, helper.Done)
+		if err != nil {
+			log.Println("Task is done, but update status failed", err)
+			return internalErrorhandler(taskId)
 		}
 	}
-
-	err = mongodb.GetInstance().UseSession(ctx, func(sc mongo.SessionContext) error {
-		err := sc.StartTransaction()
-		if err != nil {
-			return err
-		}
-
-		_, err = categoryRepository.DeleteMany(sc, bson.M{"user": userObjectId})
-		if err != nil {
-			return err
-		}
-
-		categoriesForInsert, newCategoryIdMap := collateCategoryItems(categoryItems, userObjectId)
-
-		if _, err = categoryRepository.InsertMany(sc, categoriesForInsert); err != nil {
-			return err
-		}
-
-		if _, err = entryRepository.DeleteMany(sc, bson.M{"user": userObjectId}); err != nil {
-			return err
-		}
-
-		entriesForInsert := collateEntryItems(entryItems, newCategoryIdMap, userObjectId)
-		_, err = entryRepository.InsertMany(sc, entriesForInsert)
-
-		if err != nil {
-			return err
-		}
-
-		if err = sc.CommitTransaction(sc); err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		log.Println("Something wrong in Transaction", err)
-		return internalErrorhandler()
-	}
-
 	return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("ok")
 }
 

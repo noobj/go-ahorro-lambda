@@ -14,10 +14,11 @@ import (
 	"github.com/noobj/go-serverless-services/internal/config"
 )
 
-func SyncTasks(userId string) (events.APIGatewayProxyResponse, error) {
+func PushSyncRequest(userId string) (events.APIGatewayProxyResponse, error) {
 	env := config.GetInstance()
 	session, _ := session.NewSession()
 	svc := dynamodb.New(session)
+	taskId := uuid.New()
 
 	message := sqs.SendMessageInput{
 		DelaySeconds: aws.Int64(10),
@@ -25,6 +26,10 @@ func SyncTasks(userId string) (events.APIGatewayProxyResponse, error) {
 			"UserId": {
 				DataType:    aws.String("String"),
 				StringValue: aws.String(userId),
+			},
+			"TaskId": {
+				DataType:    aws.String("String"),
+				StringValue: aws.String(taskId.String()),
 			},
 		},
 		MessageBody: aws.String("Sync ahorro entries with latest backup file"),
@@ -36,15 +41,13 @@ func SyncTasks(userId string) (events.APIGatewayProxyResponse, error) {
 	}
 
 	dynamoTaskTable := env.DynamoTaskTable
-	fmt.Printf("+%v", dynamoTaskTable)
-	taskId := uuid.New()
 	input := &dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
 			"TaskId": {
 				S: aws.String(taskId.String()),
 			},
 			"Completed": {
-				BOOL: aws.Bool(false),
+				N: aws.String(fmt.Sprint(Pending)),
 			},
 			"ttl": {
 				N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Minute*10).Unix())),
@@ -62,3 +65,32 @@ func SyncTasks(userId string) (events.APIGatewayProxyResponse, error) {
 
 	return GenerateApiResponse[events.APIGatewayProxyResponse](taskId)
 }
+
+func UpdateTaskStatus(taskId string, status int) error {
+	env := config.GetInstance()
+	session, _ := session.NewSession()
+	svc := dynamodb.New(session)
+
+	item := &dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"TaskId": {
+				S: aws.String(taskId),
+			},
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":status": {N: aws.String(fmt.Sprint(status))},
+		},
+		UpdateExpression: aws.String("SET Completed=:status"),
+		TableName:        aws.String(env.DynamoTaskTable),
+	}
+
+	_, err := svc.UpdateItem(item)
+
+	return err
+}
+
+const (
+	Failed  = -1
+	Pending = 0
+	Done    = 1
+)

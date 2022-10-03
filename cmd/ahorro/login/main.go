@@ -83,6 +83,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	resp := events.APIGatewayV2HTTPResponse{
 		StatusCode:      200,
 		IsBase64Encoded: false,
+		Body:            "logged-in",
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},
