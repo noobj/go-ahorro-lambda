@@ -24,6 +24,8 @@ type Specification struct {
 	SwimNotifyChannelId        string `required:"true" split_words:"true"`
 	DynamoRandTable            string `required:"true" split_words:"true"`
 	DynamoTaskTable            string `required:"true" split_words:"true"`
+	BackendUrl                 string `required:"true" split_words:"true"`
+	FrontendUrl                string `required:"true" split_words:"true"`
 }
 
 var specInstance *Specification

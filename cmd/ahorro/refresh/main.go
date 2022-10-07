@@ -75,6 +75,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		HttpOnly: true,
 		Secure:   true,
 		Expires:  time.Now().Add(time.Second * time.Duration(accessTokenExpireTime)),
+		SameSite: http.SameSiteNoneMode,
 		Path:     "/",
 	}
 	helper.SetCookie(cookieWithAccessTkn, &resp)

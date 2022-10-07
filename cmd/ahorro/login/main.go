@@ -97,6 +97,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		Value:    token,
 		HttpOnly: true,
 		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
 		Expires:  time.Now().Add(time.Second * time.Duration(accessTokenExpireTime)),
 		Path:     "/",
 	}
@@ -105,6 +106,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		Value:    refreshToken,
 		HttpOnly: true,
 		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
 		Expires:  time.Now().Add(time.Second * time.Duration(refreshTokenExpireTime)),
 		Path:     "/auth",
 	}

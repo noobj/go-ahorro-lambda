@@ -40,7 +40,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		TableName: aws.String(env.DynamoTaskTable),
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 20; i++ {
 		item, err := svc.GetItem(input)
 
 		if err != nil {

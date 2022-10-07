@@ -82,7 +82,13 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return internalErrorhandler()
 	}
 
-	return helper.PushSyncRequest(user.Id.Hex())
+	res, _ := helper.PushSyncRequest(user.Id.Hex())
+
+	if res.StatusCode != 200 {
+		return res, nil
+	}
+
+	return helper.GenerateRedirectResponse[events.APIGatewayProxyResponse](env.FrontendUrl)
 }
 
 func main() {

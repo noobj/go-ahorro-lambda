@@ -17,6 +17,27 @@ import (
 	"github.com/noobj/go-serverless-services/internal/types"
 )
 
+func GenerateRedirectResponse[T types.ApiResponse](urlForRedirect string) (T, error) {
+	var res T
+
+	switch t := any(&res).(type) {
+	case *events.APIGatewayProxyResponse:
+		t.StatusCode = 301
+		t.IsBase64Encoded = false
+		t.Headers = map[string]string{
+			"Location": urlForRedirect,
+		}
+	case *events.APIGatewayV2HTTPResponse:
+		t.StatusCode = 301
+		t.IsBase64Encoded = false
+		t.Headers = map[string]string{
+			"Location": urlForRedirect,
+		}
+	}
+
+	return res, nil
+}
+
 func GenerateApiResponse[T types.ApiResponse](resultForBody interface{}) (T, error) {
 	var buf bytes.Buffer
 	body, err := json.Marshal(resultForBody)

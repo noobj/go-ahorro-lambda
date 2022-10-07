@@ -123,6 +123,7 @@ functions:
         - bin/sync_callback
   sync_handler:
     handler: bin/sync_handler
+    timeout: 30
     events:
       - sqs:
           arn:

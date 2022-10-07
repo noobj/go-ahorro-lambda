@@ -72,14 +72,14 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	if err != nil {
 		log.Printf("Unable to create Drive service: %v", err)
-		return helper.GenerateApiResponse[events.APIGatewayProxyResponse](authURL)
+		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](301, authURL)
 	}
 
 	fileId := file.Files[0].Id
 
 	if _, err = service.Files.Get(fileId).Do(); err != nil {
 		log.Printf("Unable to create Drive service: %v", err)
-		return helper.GenerateApiResponse[events.APIGatewayProxyResponse](authURL)
+		return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](301, authURL)
 	}
 
 	return helper.PushSyncRequest(user.Id.Hex())
