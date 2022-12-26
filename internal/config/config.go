@@ -22,6 +22,7 @@ type Specification struct {
 	GoogleClientSecret         string `required:"true" split_words:"true"`
 	SwimNotifyBotId            string `required:"true" split_words:"true"`
 	SwimNotifyChannelId        string `required:"true" split_words:"true"`
+	DynamoSwimbotMsgTable      string `required:"true" split_words:"true"`
 	DynamoRandTable            string `required:"true" split_words:"true"`
 	DynamoTaskTable            string `required:"true" split_words:"true"`
 	BackendUrl                 string `required:"true" split_words:"true"`

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"mime"
 	"mime/multipart"
@@ -165,4 +166,24 @@ func ExtractPayloadFromToken(key string, jwtToken string) (interface{}, error) {
 var StatusCodeDefaultMsgMap = map[int]string{
 	401: "please login in",
 	500: "internal error",
+}
+
+func SendGetRequest(req string) error {
+	res, err := http.Get(req)
+	if err != nil {
+		fmt.Printf("error making http request: %s\n", err)
+
+		return err
+	}
+
+	if res.StatusCode != 200 {
+		body, err := ioutil.ReadAll(res.Body)
+		fmt.Printf("error making http request: %s\n", body)
+		fmt.Println(err)
+		res.Body.Close()
+
+		return fmt.Errorf("request send to telegram failed")
+	}
+
+	return nil
 }

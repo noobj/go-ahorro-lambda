@@ -45,6 +45,13 @@ provider:
         - "dynamodb:UpdateItem"
       Resource:
         - !GetAtt AhorroDynamoTaskStatus.Arn
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:UpdateItem"
+      Resource:
+        - !GetAtt SwimDynamoBotMessage.Arn
 package:
   individually: true
   exclude:
@@ -76,6 +83,15 @@ functions:
     package:
       include:
         - bin/swimnotify
+  swim_notification_modify:
+    handler: bin/swimnotify_modify
+    events:
+      - httpApi:
+          path: /notify
+          method: post
+    package:
+      include:
+        - bin/swimnotify_modify
   fetchentries:
     handler: bin/fetchentries
     events:
@@ -194,4 +210,22 @@ resources:
           Fn::Join:
             - "-"
             - - AhorroTaskStatus
+              - ${self:custom.stage}
+    SwimDynamoBotMessage:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: Id
+            AttributeType: S
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 1
+        KeySchema:
+          - AttributeName: Id
+            KeyType: HASH
+        TableName:
+          Fn::Join:
+            - "-"
+            - - SwimBotMessage
               - ${self:custom.stage}
