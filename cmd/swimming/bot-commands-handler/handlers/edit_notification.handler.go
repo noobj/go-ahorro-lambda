@@ -1,53 +1,30 @@
-package main
+package hanlders
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
 
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
+	"github.com/noobj/go-serverless-services/internal/types"
 )
 
-type TelegramMessageWrapper struct {
-	Message  TelegramMessageBody `json:"message"`
-	UpdateId string              `json:"update_id"`
+type EditNotificationHandler struct {
+	Body types.TelegramMessageWrapper
 }
 
-type TelegramMessageBody struct {
-	Chat TelegramMessageChat `json:"chat"`
-	Text string              `json:"text"`
-}
+func (handler EditNotificationHandler) Handle() error {
+	requestBody := handler.Body
+	tgRequestTemplate := "https://api.telegram.org/bot%s/sendMessage?chat_id=%d&text=%s"
 
-type TelegramMessageChat struct {
-	Id int64 `json:"id"`
-}
-
-func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	env := config.GetInstance()
 	botId := env.SwimNotifyBotId
-	tgRequestTemplate := "https://api.telegram.org/bot%s/sendMessage?chat_id=%d&text=%s"
-	fmt.Printf("%+v", request)
-	var body TelegramMessageWrapper
-	json.Unmarshal([]byte(request.Body), &body)
-	fmt.Printf("%+v", body)
-	messageText := body.Message.Text
-	chatId := body.Message.Chat.Id
-
-	if matched, _ := regexp.MatchString("^/editmsg(@SwimNotifyBot)?", messageText); !matched {
-		requestURL := fmt.Sprintf(tgRequestTemplate, botId, chatId, "shut up")
-		helper.SendGetRequest(requestURL)
-
-		return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("failed")
-	}
-
+	messageText := requestBody.Message.Text
+	chatId := requestBody.Message.Chat.Id
 	re := regexp.MustCompile(`^/editmsg(@SwimNotifyBot)? (.*)`)
 	matched := re.FindStringSubmatch(messageText)
 
@@ -55,7 +32,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		requestURL := fmt.Sprintf(tgRequestTemplate, botId, chatId, "empty msg is not allowed")
 		helper.SendGetRequest(requestURL)
 
-		return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("failed")
+		return fmt.Errorf("failed")
 	}
 
 	msgForStore := matched[len(matched)-1]
@@ -81,15 +58,13 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 		requestURL := fmt.Sprintf(tgRequestTemplate, botId, chatId, "failed")
 		helper.SendGetRequest(requestURL)
-		return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("failed")
+		return fmt.Errorf("failed")
 	}
 
 	requestURL := fmt.Sprintf(tgRequestTemplate, botId, chatId, "done")
 	helper.SendGetRequest(requestURL)
+	requestURL = fmt.Sprintf(tgRequestTemplate, botId, chatId, msgForStore)
+	helper.SendGetRequest(requestURL)
 
-	return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("done")
-}
-
-func main() {
-	lambda.Start(Handler)
+	return nil
 }

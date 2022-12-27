@@ -4,7 +4,7 @@ swimbuild:
 	env GOARCH=amd64 GOOS=linux go build -o bin/dailyfetch cmd/swimming/dailyfetch/main.go
 	env GOARCH=amd64 GOOS=linux go build -o bin/crowdscraper cmd/swimming/crowdscraper/main.go
 	env GOARCH=amd64 GOOS=linux go build -o bin/swimnotify cmd/swimming/notify/main.go
-	env GOARCH=amd64 GOOS=linux go build -o bin/swimnotify_modify cmd/swimming/notification-modify/main.go
+	env GOARCH=amd64 GOOS=linux go build -o bin/bot_commands_handler cmd/swimming/bot-commands-handler/main.go
 
 build:
 	env GOARCH=amd64 GOOS=linux go build -o bin/fetchentries cmd/ahorro/fetchentries/main.go

@@ -83,15 +83,15 @@ functions:
     package:
       include:
         - bin/swimnotify
-  swim_notification_modify:
-    handler: bin/swimnotify_modify
+  bot_commands_handler:
+    handler: bin/bot_commands_handler
     events:
       - httpApi:
-          path: /notify
+          path: /command
           method: post
     package:
       include:
-        - bin/swimnotify_modify
+        - bin/bot_commands_handler
   fetchentries:
     handler: bin/fetchentries
     events:
