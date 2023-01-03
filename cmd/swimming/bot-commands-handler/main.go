@@ -26,16 +26,31 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	messageText := requestBody.Message.Text
 	chatId := requestBody.Message.Chat.Id
 
-	if matched, _ := regexp.MatchString("^/editmsg(@SwimNotifyBot)?", messageText); !matched {
-		requestURL := fmt.Sprintf(tgRequestTemplate, botId, chatId, "shut up")
+	re := regexp.MustCompile(`^/(\w+)(@SwimNotifyBot)?.*`)
+	matched := re.FindStringSubmatch(messageText)
+	if len(matched) < 2 {
+		requestURL := fmt.Sprintf(tgRequestTemplate, botId, chatId, "Shut up")
 		helper.SendGetRequest(requestURL)
 
 		return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("failed")
 	}
 
 	var handler hanlders.IHandler
-	handler = hanlders.EditNotificationHandler{
-		Body: requestBody,
+
+	switch matched[1] {
+	case "editmsg":
+		handler = hanlders.EditNotificationHandler{
+			Body: requestBody,
+		}
+	case "crowd":
+		handler = hanlders.CrowdReportHandler{
+			Body: requestBody,
+		}
+	default:
+		requestURL := fmt.Sprintf(tgRequestTemplate, botId, chatId, "Wrong command you fool")
+		helper.SendGetRequest(requestURL)
+
+		return helper.GenerateApiResponse[events.APIGatewayProxyResponse]("failed")
 	}
 
 	if err := handler.Handle(); err != nil {
