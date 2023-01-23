@@ -239,15 +239,15 @@ func collateEntryItems(entryItems []EntryItem, cateIdMap map[string]primitive.Ob
 func main() {
 	userRepo := UserRepository.New()
 	defer userRepo.Disconnect()()
-	container.NamedSingleton("UserRepo", func() repositories.IRepository {
+	container.NamedSingletonLazy("UserRepo", func() repositories.IRepository {
 		return userRepo
 	})
 
-	container.NamedSingleton("CategoryRepo", func() repositories.IRepository {
+	container.NamedSingletonLazy("CategoryRepo", func() repositories.IRepository {
 		return CategoryRepository.New()
 	})
 
-	container.NamedSingleton("EntryRepo", func() repositories.IRepository {
+	container.NamedSingletonLazy("EntryRepo", func() repositories.IRepository {
 		return AhorroRepository.New()
 	})
 

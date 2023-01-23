@@ -86,7 +86,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 func main() {
 	repo := LoginInfoRepository.New()
 
-	container.NamedSingleton("LoginInfoRepo", func() repositories.IRepository {
+	container.NamedSingletonLazy("LoginInfoRepo", func() repositories.IRepository {
 		return repo
 	})
 	defer repo.Disconnect()()

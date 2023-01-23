@@ -118,11 +118,11 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 func main() {
 	userRepo := UserRepository.New()
-	container.NamedSingleton("UserRepo", func() repositories.IRepository {
+	container.NamedSingletonLazy("UserRepo", func() repositories.IRepository {
 		return userRepo
 	})
 
-	container.NamedSingleton("LoginInfoRepo", func() repositories.IRepository {
+	container.NamedSingletonLazy("LoginInfoRepo", func() repositories.IRepository {
 		return LoginInfoRepository.New()
 	})
 	defer userRepo.Disconnect()()
