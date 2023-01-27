@@ -177,5 +177,5 @@ func main() {
 		return entryRepo
 	})
 
-	lambda.Start(jwtMiddleWare.Auth(Handler))
+	lambda.Start(jwtMiddleWare.Handle(Handler))
 }

@@ -86,5 +86,5 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 }
 
 func main() {
-	lambda.Start(jwtMiddleWare.Auth(Handler))
+	lambda.Start(jwtMiddleWare.Handle(Handler))
 }

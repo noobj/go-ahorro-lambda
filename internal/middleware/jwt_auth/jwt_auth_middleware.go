@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func Auth[T types.ApiRequest, R types.ApiResponse](f types.HandlerFunc[T, R]) types.HandlerFunc[T, R] {
+func Handle[T types.ApiRequest, R types.ApiResponse](f types.HandlerFunc[T, R]) types.HandlerFunc[T, R] {
 	return jwtmiddleware.Handle(f, payloadHandler)
 }
 
