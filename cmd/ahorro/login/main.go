@@ -12,6 +12,7 @@ import (
 	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
+	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
@@ -117,15 +118,5 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 }
 
 func main() {
-	userRepo := UserRepository.New()
-	container.NamedSingletonLazy("UserRepo", func() repositories.IRepository {
-		return userRepo
-	})
-
-	container.NamedSingletonLazy("LoginInfoRepo", func() repositories.IRepository {
-		return LoginInfoRepository.New()
-	})
-	defer userRepo.Disconnect()()
-
-	lambda.Start(Handler)
+	lambda.Start(bindioc.Handle(Handler))
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
+	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/repositories"
 	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
@@ -79,7 +80,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	// 	}
 	// }
 	var entryRepository repositories.IRepository
-	container.Resolve(&entryRepository)
+	container.NamedResolve(&entryRepository, "EntryRepo")
 
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
 		{Key: "$expr", Value: bson.D{
@@ -170,12 +171,5 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 }
 
 func main() {
-	entryRepo := AhorroRepository.New()
-	defer entryRepo.Disconnect()()
-
-	container.Singleton(func() repositories.IRepository {
-		return entryRepo
-	})
-
-	lambda.Start(jwtMiddleWare.Handle(Handler))
+	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(Handler)))
 }
