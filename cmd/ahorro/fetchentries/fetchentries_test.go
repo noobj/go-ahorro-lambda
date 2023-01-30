@@ -80,7 +80,7 @@ var _ = Describe("Fetchentries", func() {
 			Password: "123456",
 		})
 
-		container.Singleton(func() repositories.IRepository {
+		container.NamedSingletonLazy("EntryRepo", func() repositories.IRepository {
 			return m
 		})
 		fakeRequest.QueryStringParameters = make(map[string]string)

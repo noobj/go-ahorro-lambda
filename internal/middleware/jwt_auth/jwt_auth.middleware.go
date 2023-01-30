@@ -8,6 +8,8 @@ import (
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"github.com/noobj/jwtmiddleware"
+
+	// TODO: use internal types instead
 	"github.com/noobj/jwtmiddleware/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

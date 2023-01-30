@@ -5,6 +5,8 @@ import (
 
 	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/repositories"
+
+	// TODO: use internal types instead
 	"github.com/noobj/jwtmiddleware/types"
 
 	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
