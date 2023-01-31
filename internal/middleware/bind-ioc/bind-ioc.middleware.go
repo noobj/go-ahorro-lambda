@@ -4,13 +4,12 @@ import (
 	"context"
 
 	"github.com/golobby/container/v3"
-	"github.com/noobj/go-serverless-services/internal/repositories"
 
 	// TODO: use internal types instead
 	"github.com/noobj/jwtmiddleware/types"
 
-	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
 	CategoryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/category"
+	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/entry"
 	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 )
@@ -20,20 +19,20 @@ func Handle[T types.ApiRequest, R types.ApiResponse](next types.HandlerFunc[T, R
 		userRepo := UserRepository.New()
 		defer userRepo.Disconnect()()
 
-		container.NamedSingletonLazy("UserRepo", func() repositories.IRepository {
-			return userRepo
+		container.SingletonLazy(func() UserRepository.UserRepository {
+			return *userRepo
 		})
 
-		container.NamedSingletonLazy("LoginInfoRepo", func() repositories.IRepository {
-			return LoginInfoRepository.New()
+		container.SingletonLazy(func() LoginInfoRepository.LoginInfoRepository {
+			return *LoginInfoRepository.New()
 		})
 
-		container.NamedSingletonLazy("CategoryRepo", func() repositories.IRepository {
-			return CategoryRepository.New()
+		container.SingletonLazy(func() CategoryRepository.CategoryRepository {
+			return *CategoryRepository.New()
 		})
 
-		container.NamedSingletonLazy("EntryRepo", func() repositories.IRepository {
-			return AhorroRepository.New()
+		container.SingletonLazy(func() EntryRepository.EntryRepository {
+			return *EntryRepository.New()
 		})
 
 		return next(ctx, request)
