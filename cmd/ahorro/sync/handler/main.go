@@ -18,8 +18,8 @@ import (
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	"github.com/noobj/go-serverless-services/internal/mongodb"
 	"github.com/noobj/go-serverless-services/internal/repositories"
-	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
 	CategoryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/category"
+	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/entry"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -248,7 +248,7 @@ func main() {
 	})
 
 	container.NamedSingletonLazy("EntryRepo", func() repositories.IRepository {
-		return AhorroRepository.New()
+		return EntryRepository.New()
 	})
 
 	lambda.Start(Handler)

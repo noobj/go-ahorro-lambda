@@ -13,7 +13,6 @@ import (
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
-	"github.com/noobj/go-serverless-services/internal/repositories"
 	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"go.mongodb.org/mongo-driver/bson"
@@ -32,13 +31,14 @@ func insertNewRefreshTokenIntoLoginInfo(userId primitive.ObjectID, refreshToken 
 		RefreshToken: refreshToken,
 		CreatedAt:    primitive.NewDateTimeFromTime(time.Now()),
 	}
-	var loginInfoRepository repositories.IRepository
-	container.NamedResolve(&loginInfoRepository, "LoginInfoRepo")
+	var loginInfoRepository LoginInfoRepository.LoginInfoRepository
+	container.Resolve(&loginInfoRepository)
 	loginInfoRepository.InsertOne(context.TODO(), loginInfo)
 }
 
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayV2HTTPResponse, error) {
-	var userRepository repositories.IRepository
+	var userRepository UserRepository.UserRepository
+	container.Resolve(&userRepository)
 	var requestBody LoginDto
 
 	formData, err := helper.ParseMultipartForm(request.Headers["content-type"], strings.NewReader(request.Body), request.IsBase64Encoded)
@@ -51,8 +51,6 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	if requestBody.Account == "" {
 		return events.APIGatewayV2HTTPResponse{Body: "request body error", StatusCode: 400}, nil
 	}
-
-	container.NamedResolve(&userRepository, "UserRepo")
 
 	var user UserRepository.User
 	err = userRepository.FindOne(context.TODO(), bson.M{"account": requestBody.Account}).Decode(&user)

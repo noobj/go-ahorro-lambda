@@ -11,8 +11,7 @@ import (
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
-	"github.com/noobj/go-serverless-services/internal/repositories"
-	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
+	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/entry"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -29,7 +28,7 @@ type Entry struct {
 type AggregateResult struct {
 	Entries  []Entry
 	Sum      float32
-	Category []AhorroRepository.Category
+	Category []EntryRepository.Category
 }
 
 type CategoryEntriesBundle struct {
@@ -48,6 +47,8 @@ func checkTimeFormat(format string, timeString string) bool {
 }
 
 func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+	var entryRepository EntryRepository.EntryRepository
+	container.Resolve(&entryRepository)
 	user, ok := helper.GetUserFromContext(ctx)
 	if !ok {
 		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
@@ -79,8 +80,6 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	// 		excludeCondition = append(excludeCondition, condition)
 	// 	}
 	// }
-	var entryRepository repositories.IRepository
-	container.NamedResolve(&entryRepository, "EntryRepo")
 
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
 		{Key: "$expr", Value: bson.D{

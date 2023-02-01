@@ -18,7 +18,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/golobby/container/v3"
-	"github.com/noobj/go-serverless-services/internal/repositories"
+	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
+	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	mocks "github.com/noobj/go-serverless-services/internal/repositories/mocks"
 )
 
@@ -39,12 +40,14 @@ var _ = Describe("Login", func() {
 
 		ctrl := gomock.NewController(GinkgoT())
 		m := mocks.NewMockIRepository(ctrl)
+		userRepoMock := UserRepository.UserRepository{IRepository: m}
+		loginRepoMock := LoginInfoRepository.LoginInfoRepository{IRepository: m}
 
-		container.NamedSingleton("UserRepo", func() repositories.IRepository {
-			return m
+		container.Singleton(func() UserRepository.UserRepository {
+			return userRepoMock
 		})
-		container.NamedSingleton("LoginInfoRepo", func() repositories.IRepository {
-			return m
+		container.Singleton(func() LoginInfoRepository.LoginInfoRepository {
+			return loginRepoMock
 		})
 
 		fakeSingleResult := mongo.NewSingleResultFromDocument(fakeUserDoc, nil, nil)

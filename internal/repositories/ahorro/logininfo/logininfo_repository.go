@@ -14,18 +14,15 @@ type LoginInfo struct {
 }
 
 type LoginInfoRepository struct {
-	AbstractRepository
+	IRepository
 }
 
 func New() *LoginInfoRepository {
-	abstractRepository := AbstractRepository{
-		BaseRepository: BaseRepository{
-			Client:     mongodb.GetInstance(),
-			Collection: mongodb.GetInstance().Database("ahorro").Collection("loginInfos"),
-		},
+	baseRepository := BaseRepository{
+		Client:     mongodb.GetInstance(),
+		Collection: mongodb.GetInstance().Database("ahorro").Collection("loginInfos"),
 	}
-	repo := LoginInfoRepository{AbstractRepository: abstractRepository}
-	repo.IRepository = abstractRepository
+	repo := LoginInfoRepository{IRepository: baseRepository}
 
 	return &repo
 }

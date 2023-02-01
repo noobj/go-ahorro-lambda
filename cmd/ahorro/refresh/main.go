@@ -13,7 +13,6 @@ import (
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
-	"github.com/noobj/go-serverless-services/internal/repositories"
 	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -26,6 +25,8 @@ type LoginDto struct {
 var errorHandler = helper.GenerateErrorResponse[events.APIGatewayV2HTTPResponse]
 
 func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	var loginInfoRepository LoginInfoRepository.LoginInfoRepository
+	container.Resolve(&loginInfoRepository)
 	cookiesMap := helper.ParseCookie(request.Cookies)
 
 	if _, ok := cookiesMap["refresh_token"]; !ok {
@@ -44,9 +45,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return errorHandler(401)
 	}
 
-	var loginInfoRepository repositories.IRepository
 	var loginInfo LoginInfoRepository.LoginInfo
-	container.NamedResolve(&loginInfoRepository, "LoginInfoRepo")
 	loginInfoRepository.FindOne(context.TODO(), bson.M{"refreshToken": cookiesMap["refresh_token"]}).Decode(&loginInfo)
 
 	if loginInfo.User.Hex() != userId {

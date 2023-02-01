@@ -15,7 +15,6 @@ import (
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
-	"github.com/noobj/go-serverless-services/internal/repositories"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/oauth2"
@@ -30,7 +29,9 @@ var internalErrorhandler = func() (events.APIGatewayProxyResponse, error) {
 }
 
 func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
-	var userRepositoryTmp repositories.IRepository
+	var userRepository UserRepository.UserRepository
+	container.Resolve(&userRepository)
+
 	user, ok := helper.GetUserFromContext(ctx)
 	if !ok {
 		return authErrorhandler()
@@ -68,9 +69,6 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		fmt.Println(err)
 		return authErrorhandler("exchange code error")
 	}
-
-	container.NamedResolve(&userRepositoryTmp, "UserRepo")
-	userRepository, ok := userRepositoryTmp.(UserRepository.IUserRepository)
 
 	if !ok {
 		log.Println("resolve repository error")

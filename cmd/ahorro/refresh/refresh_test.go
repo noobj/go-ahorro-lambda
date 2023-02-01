@@ -11,7 +11,7 @@ import (
 	"github.com/golobby/container/v3"
 	"github.com/joho/godotenv"
 	main "github.com/noobj/go-serverless-services/cmd/ahorro/refresh"
-	"github.com/noobj/go-serverless-services/internal/repositories"
+	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
 	mockRepo "github.com/noobj/go-serverless-services/internal/repositories/mocks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -33,9 +33,9 @@ var _ = Describe("Refresh", func() {
 
 		ctrl := gomock.NewController(GinkgoT())
 		m := mockRepo.NewMockIRepository(ctrl)
-
-		container.NamedSingleton("LoginInfoRepo", func() repositories.IRepository {
-			return m
+		loginRepoMock := LoginInfoRepository.LoginInfoRepository{IRepository: m}
+		container.Singleton(func() LoginInfoRepository.LoginInfoRepository {
+			return loginRepoMock
 		})
 
 		fakeLoginInfoDoc := bson.M{

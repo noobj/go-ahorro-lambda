@@ -1,4 +1,4 @@
-package ahorro
+package repository
 
 import (
 	"github.com/noobj/go-serverless-services/internal/mongodb"
@@ -24,19 +24,16 @@ type Category struct {
 	V     int `bson:"__v,omitempty"`
 }
 
-type AhorroRepository struct {
-	AbstractRepository
+type EntryRepository struct {
+	IRepository
 }
 
-func New() *AhorroRepository {
-	abstractRepository := AbstractRepository{
-		BaseRepository: BaseRepository{
-			Client:     mongodb.GetInstance(),
-			Collection: mongodb.GetInstance().Database("ahorro").Collection("entries"),
-		},
+func New() *EntryRepository {
+	baseRepository := BaseRepository{
+		Client:     mongodb.GetInstance(),
+		Collection: mongodb.GetInstance().Database("ahorro").Collection("entries"),
 	}
-	repo := AhorroRepository{AbstractRepository: abstractRepository}
-	repo.IRepository = abstractRepository
+	repo := EntryRepository{IRepository: baseRepository}
 
 	return &repo
 }

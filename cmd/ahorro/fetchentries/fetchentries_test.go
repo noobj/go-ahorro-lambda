@@ -9,7 +9,7 @@ import (
 	"github.com/golobby/container/v3"
 	main "github.com/noobj/go-serverless-services/cmd/ahorro/fetchentries"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
-	"github.com/noobj/go-serverless-services/internal/repositories"
+	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/entry"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	. "github.com/noobj/go-serverless-services/internal/repositories/mocks"
 	. "github.com/onsi/ginkgo/v2"
@@ -74,15 +74,17 @@ var _ = Describe("Fetchentries", func() {
 	BeforeEach(func() {
 		ctrl := gomock.NewController(GinkgoT())
 		m := NewMockIRepository(ctrl)
+		a := EntryRepository.EntryRepository{IRepository: m}
 		ctx = context.WithValue(context.Background(), helper.ContextKeyUser, UserRepository.User{
 			Id:       fakeObjId,
 			Account:  "jjj",
 			Password: "123456",
 		})
 
-		container.NamedSingletonLazy("EntryRepo", func() repositories.IRepository {
-			return m
+		container.SingletonLazy(func() EntryRepository.EntryRepository {
+			return a
 		})
+
 		fakeRequest.QueryStringParameters = make(map[string]string)
 		fakeRequest.QueryStringParameters["timeStart"] = "2022-01-01"
 		fakeRequest.QueryStringParameters["timeEnd"] = "2022-01-31"

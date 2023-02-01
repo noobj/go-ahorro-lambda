@@ -19,7 +19,8 @@ type User struct {
 }
 
 type UserRepository struct {
-	repositories.AbstractRepository
+	repositories.IRepository
+	Collection *mongo.Collection
 }
 
 //go:generate mockgen -source=user_repository.go -package repositories -aux_files repositories=../../repository.go -destination ../../mocks/user/mock_user_repository.go
@@ -29,14 +30,12 @@ type IUserRepository interface {
 }
 
 func New() *UserRepository {
-	abstractRepository := repositories.AbstractRepository{
-		BaseRepository: repositories.BaseRepository{
-			Client:     mongodb.GetInstance(),
-			Collection: mongodb.GetInstance().Database("ahorro").Collection("users"),
-		},
+	baseRepository := repositories.BaseRepository{
+		Client:     mongodb.GetInstance(),
+		Collection: mongodb.GetInstance().Database("ahorro").Collection("loginInfos"),
 	}
-	repo := UserRepository{AbstractRepository: abstractRepository}
-	repo.IRepository = abstractRepository
+	repo := UserRepository{IRepository: baseRepository}
+	repo.Collection = baseRepository.Collection
 
 	return &repo
 }
