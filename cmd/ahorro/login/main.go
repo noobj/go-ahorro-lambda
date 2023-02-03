@@ -13,6 +13,7 @@ import (
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
+	"github.com/noobj/go-serverless-services/internal/mongodb"
 	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"go.mongodb.org/mongo-driver/bson"
@@ -116,5 +117,6 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 }
 
 func main() {
+	defer mongodb.Disconnect()()
 	lambda.Start(bindioc.Handle(Handler))
 }

@@ -3,7 +3,7 @@ module github.com/noobj/go-serverless-services
 go 1.18
 
 require (
-	github.com/aws/aws-lambda-go v1.34.1
+	github.com/aws/aws-lambda-go v1.37.0
 	github.com/aws/aws-sdk-go v1.44.79
 	github.com/gocolly/colly v1.2.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -12,7 +12,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/noobj/jwtmiddleware v1.0.2
+	github.com/noobj/jwtmiddleware v1.0.4
 	github.com/onsi/ginkgo/v2 v2.2.0
 	github.com/onsi/gomega v1.20.2
 	go.mongodb.org/mongo-driver v1.9.1

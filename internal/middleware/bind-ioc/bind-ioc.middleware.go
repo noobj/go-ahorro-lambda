@@ -16,11 +16,8 @@ import (
 
 func Handle[T types.ApiRequest, R types.ApiResponse](next types.HandlerFunc[T, R]) types.HandlerFunc[T, R] {
 	return func(ctx context.Context, request T) (R, error) {
-		userRepo := UserRepository.New()
-		defer userRepo.Disconnect()()
-
 		container.SingletonLazy(func() UserRepository.UserRepository {
-			return *userRepo
+			return *UserRepository.New()
 		})
 
 		container.SingletonLazy(func() LoginInfoRepository.LoginInfoRepository {

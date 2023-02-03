@@ -16,8 +16,9 @@ import (
 	"github.com/golobby/container/v3"
 	"github.com/mitchellh/mapstructure"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
+	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
+	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/mongodb"
-	"github.com/noobj/go-serverless-services/internal/repositories"
 	CategoryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/category"
 	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/entry"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
@@ -58,12 +59,12 @@ var internalErrorhandler = func(taskId string, message ...string) (events.APIGat
 }
 
 func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxyResponse, error) {
-	var userRepository repositories.IRepository
-	container.NamedResolve(&userRepository, "UserRepo")
-	var categoryRepository repositories.IRepository
-	container.NamedResolve(&categoryRepository, "CategoryRepo")
-	var entryRepository repositories.IRepository
-	container.NamedResolve(&entryRepository, "EntryRepo")
+	var entryRepository EntryRepository.EntryRepository
+	container.Resolve(&entryRepository)
+	var userRepository UserRepository.UserRepository
+	container.Resolve(&userRepository)
+	var categoryRepository CategoryRepository.CategoryRepository
+	container.Resolve(&categoryRepository)
 
 	for _, record := range event.Records {
 		userId := *record.MessageAttributes["UserId"].StringValue
@@ -237,19 +238,6 @@ func collateEntryItems(entryItems []EntryItem, cateIdMap map[string]primitive.Ob
 }
 
 func main() {
-	userRepo := UserRepository.New()
-	defer userRepo.Disconnect()()
-	container.NamedSingletonLazy("UserRepo", func() repositories.IRepository {
-		return userRepo
-	})
-
-	container.NamedSingletonLazy("CategoryRepo", func() repositories.IRepository {
-		return CategoryRepository.New()
-	})
-
-	container.NamedSingletonLazy("EntryRepo", func() repositories.IRepository {
-		return EntryRepository.New()
-	})
-
-	lambda.Start(Handler)
+	defer mongodb.Disconnect()()
+	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(Handler)))
 }

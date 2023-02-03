@@ -71,6 +71,8 @@ github.com/antchfx/xpath v1.2.1/go.mod h1:i54GszH55fYfBmoZXapTHN8T8tkcHfRgLyVwwq
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/aws/aws-lambda-go v1.34.1 h1:M3a/uFYBjii+tDcOJ0wL/WyFi2550FHoECdPf27zvOs=
 github.com/aws/aws-lambda-go v1.34.1/go.mod h1:jwFe2KmMsHmffA1X2R09hH6lFzJQxzI8qK17ewzbQMM=
+github.com/aws/aws-lambda-go v1.37.0 h1:WXkQ/xhIcXZZ2P5ZBEw+bbAKeCEcb5NtiYpSwVVzIXg=
+github.com/aws/aws-lambda-go v1.37.0/go.mod h1:jwFe2KmMsHmffA1X2R09hH6lFzJQxzI8qK17ewzbQMM=
 github.com/aws/aws-sdk-go v1.44.79 h1:IZCtfBq9VlJ1Eu34I+2Y76q+XkvTtZYbEwaoVM1gzoA=
 github.com/aws/aws-sdk-go v1.44.79/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
@@ -239,6 +241,10 @@ github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RR
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFWZD2D7SIkUc=
 github.com/noobj/jwtmiddleware v1.0.2 h1:h30phLAskmcpxBz/sd01qonIfF1Pu5pd1EhAm8JXsVs=
 github.com/noobj/jwtmiddleware v1.0.2/go.mod h1:KBR615o5jFZPvzWFs7bQ9ZS/69bo+uJCkI+k0yuQLTg=
+github.com/noobj/jwtmiddleware v1.0.3 h1:kfJNDI22T6CCVoALFvMJi2iHBngSKOSAclrMs0mBvrc=
+github.com/noobj/jwtmiddleware v1.0.3/go.mod h1:KBR615o5jFZPvzWFs7bQ9ZS/69bo+uJCkI+k0yuQLTg=
+github.com/noobj/jwtmiddleware v1.0.4 h1:QWfjMw7d+CaBc14vthC7duzdEeLvq7cwZH133YCLw7I=
+github.com/noobj/jwtmiddleware v1.0.4/go.mod h1:KBR615o5jFZPvzWFs7bQ9ZS/69bo+uJCkI+k0yuQLTg=
 github.com/onsi/ginkgo/v2 v2.2.0 h1:3ZNA3L1c5FYDFTTxbFeVGGD8jYvjYauHD30YgLxVsNI=
 github.com/onsi/ginkgo/v2 v2.2.0/go.mod h1:MEH45j8TBi6u9BMogfbp0stKC5cdGjumZj5Y7AG4VIk=
 github.com/onsi/gomega v1.20.2 h1:8uQq0zMgLEfa0vRrrBgaJF2gyW9Da9BmfGV+OyUzfkY=

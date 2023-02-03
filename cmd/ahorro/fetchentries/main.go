@@ -11,6 +11,7 @@ import (
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
+	"github.com/noobj/go-serverless-services/internal/mongodb"
 	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/entry"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -170,5 +171,6 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 }
 
 func main() {
+	defer mongodb.Disconnect()()
 	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(Handler)))
 }
