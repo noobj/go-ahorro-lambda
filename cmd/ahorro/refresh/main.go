@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
@@ -25,9 +24,11 @@ type LoginDto struct {
 
 var errorHandler = helper.GenerateErrorResponse[events.APIGatewayV2HTTPResponse]
 
-func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
-	var loginInfoRepository LoginInfoRepository.LoginInfoRepository
-	container.Resolve(&loginInfoRepository)
+type Invoker struct {
+	loginInfoRepository LoginInfoRepository.LoginInfoRepository `container:"type"`
+}
+
+func (this *Invoker) Invoke(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	cookiesMap := helper.ParseCookie(request.Cookies)
 
 	if _, ok := cookiesMap["refresh_token"]; !ok {
@@ -47,7 +48,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	}
 
 	var loginInfo LoginInfoRepository.LoginInfo
-	loginInfoRepository.FindOne(context.TODO(), bson.M{"refreshToken": cookiesMap["refresh_token"]}).Decode(&loginInfo)
+	this.loginInfoRepository.FindOne(context.TODO(), bson.M{"refreshToken": cookiesMap["refresh_token"]}).Decode(&loginInfo)
 
 	if loginInfo.User.Hex() != userId {
 		fmt.Println("Didn't match or find the loginInfo user", loginInfo.User.Hex(), userId)
@@ -86,5 +87,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 func main() {
 	defer mongodb.Disconnect()()
-	lambda.Start(bindioc.Handle(Handler))
+	invoker := Invoker{}
+
+	lambda.Start(bindioc.Handle(invoker.Invoke, &invoker))
 }

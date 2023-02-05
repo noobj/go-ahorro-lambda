@@ -17,9 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/golang/mock/gomock"
-	"github.com/golobby/container/v3"
-	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
-	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
+	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	mocks "github.com/noobj/go-serverless-services/internal/repositories/mocks"
 )
 
@@ -29,6 +27,7 @@ var fakeUserDoc = bson.M{"_id": fakeObjId, "account": "jjj", "password": "$2b$10
 
 var _ = Describe("Login", func() {
 	var fakeRequest events.APIGatewayProxyRequest
+	invoker := main.Invoker{}
 
 	if err := godotenv.Load("../../../.env.example"); err != nil {
 		log.Println("No .env file found", err)
@@ -40,15 +39,9 @@ var _ = Describe("Login", func() {
 
 		ctrl := gomock.NewController(GinkgoT())
 		m := mocks.NewMockIRepository(ctrl)
-		userRepoMock := UserRepository.UserRepository{IRepository: m}
-		loginRepoMock := LoginInfoRepository.LoginInfoRepository{IRepository: m}
-
-		container.Singleton(func() UserRepository.UserRepository {
-			return userRepoMock
-		})
-		container.Singleton(func() LoginInfoRepository.LoginInfoRepository {
-			return loginRepoMock
-		})
+		if err := helper.BindIocForTesting(m, &invoker); err != nil {
+			panic(err.Error())
+		}
 
 		fakeSingleResult := mongo.NewSingleResultFromDocument(fakeUserDoc, nil, nil)
 		fakeInsertOneResult := &mongo.InsertOneResult{InsertedID: 123}
@@ -70,7 +63,7 @@ var _ = Describe("Login", func() {
 			mw.Close()
 			fakeRequest.Body = buf.String()
 
-			res, err := main.Handler(context.TODO(), fakeRequest)
+			res, err := invoker.Invoke(context.TODO(), fakeRequest)
 
 			header := res.Cookies
 			Expect(err).To(BeNil())
@@ -89,7 +82,7 @@ var _ = Describe("Login", func() {
 			mw.Close()
 			fakeRequest.Body = buf.String()
 
-			res, err := main.Handler(context.TODO(), fakeRequest)
+			res, err := invoker.Invoke(context.TODO(), fakeRequest)
 			Expect(err).To(BeNil())
 			Expect(res.StatusCode).To(Equal(statusCode))
 			Expect(res.Body).Should(Equal(body))

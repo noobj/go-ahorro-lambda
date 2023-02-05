@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
@@ -47,9 +46,11 @@ func checkTimeFormat(format string, timeString string) bool {
 	return err == nil
 }
 
-func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
-	var entryRepository EntryRepository.EntryRepository
-	container.Resolve(&entryRepository)
+type Invoker struct {
+	entryRepository EntryRepository.EntryRepository `container:"type"`
+}
+
+func (this *Invoker) Invoke(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	user, ok := helper.GetUserFromContext(ctx)
 	if !ok {
 		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
@@ -129,7 +130,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	},
 	}}
 
-	repoResults := entryRepository.Aggregate([]bson.D{matchStage, sortStage, groupStage, sortSumStage, lookupStage})
+	repoResults := this.entryRepository.Aggregate([]bson.D{matchStage, sortStage, groupStage, sortSumStage, lookupStage})
 	var categories []CategoryEntriesBundle
 	total := float32(0.0)
 	for _, repoResult := range repoResults {
@@ -172,5 +173,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 func main() {
 	defer mongodb.Disconnect()()
-	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(Handler)))
+	invoker := Invoker{}
+
+	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(invoker.Invoke, &invoker)))
 }

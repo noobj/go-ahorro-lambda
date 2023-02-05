@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
@@ -26,20 +25,21 @@ type LoginDto struct {
 	Password string
 }
 
-func insertNewRefreshTokenIntoLoginInfo(userId primitive.ObjectID, refreshToken string) {
+func (this *Invoker) insertNewRefreshTokenIntoLoginInfo(userId primitive.ObjectID, refreshToken string) {
 	loginInfo := LoginInfoRepository.LoginInfo{
 		User:         userId,
 		RefreshToken: refreshToken,
 		CreatedAt:    primitive.NewDateTimeFromTime(time.Now()),
 	}
-	var loginInfoRepository LoginInfoRepository.LoginInfoRepository
-	container.Resolve(&loginInfoRepository)
-	loginInfoRepository.InsertOne(context.TODO(), loginInfo)
+	this.loginInfoRepository.InsertOne(context.TODO(), loginInfo)
 }
 
-func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayV2HTTPResponse, error) {
-	var userRepository UserRepository.UserRepository
-	container.Resolve(&userRepository)
+type Invoker struct {
+	userRepository      UserRepository.UserRepository           `container:"type"`
+	loginInfoRepository LoginInfoRepository.LoginInfoRepository `container:"type"`
+}
+
+func (this *Invoker) Invoke(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayV2HTTPResponse, error) {
 	var requestBody LoginDto
 
 	formData, err := helper.ParseMultipartForm(request.Headers["content-type"], strings.NewReader(request.Body), request.IsBase64Encoded)
@@ -54,7 +54,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}
 
 	var user UserRepository.User
-	err = userRepository.FindOne(context.TODO(), bson.M{"account": requestBody.Account}).Decode(&user)
+	err = this.userRepository.FindOne(context.TODO(), bson.M{"account": requestBody.Account}).Decode(&user)
 	if err != nil {
 		log.Println(err)
 		return events.APIGatewayV2HTTPResponse{Body: "couldn't find the user", StatusCode: 404}, nil
@@ -78,7 +78,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayV2HTTPResponse{Body: "internal error", StatusCode: 500}, nil
 	}
 
-	insertNewRefreshTokenIntoLoginInfo(user.Id, refreshToken)
+	this.insertNewRefreshTokenIntoLoginInfo(user.Id, refreshToken)
 
 	resp := events.APIGatewayV2HTTPResponse{
 		StatusCode:      200,
@@ -118,5 +118,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 func main() {
 	defer mongodb.Disconnect()()
-	lambda.Start(bindioc.Handle(Handler))
+	invoker := Invoker{}
+
+	lambda.Start(bindioc.Handle(invoker.Invoke, &invoker))
 }

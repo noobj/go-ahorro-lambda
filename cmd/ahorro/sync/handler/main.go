@@ -13,7 +13,6 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/golobby/container/v3"
 	"github.com/mitchellh/mapstructure"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
@@ -58,14 +57,13 @@ var internalErrorhandler = func(taskId string, message ...string) (events.APIGat
 	return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500, message...)
 }
 
-func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxyResponse, error) {
-	var entryRepository EntryRepository.EntryRepository
-	container.Resolve(&entryRepository)
-	var userRepository UserRepository.UserRepository
-	container.Resolve(&userRepository)
-	var categoryRepository CategoryRepository.CategoryRepository
-	container.Resolve(&categoryRepository)
+type Invoker struct {
+	userRepository     UserRepository.UserRepository         `container:"type"`
+	entryRepository    EntryRepository.EntryRepository       `container:"type"`
+	categoryRepository CategoryRepository.CategoryRepository `container:"type"`
+}
 
+func (this *Invoker) Invoke(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxyResponse, error) {
 	for _, record := range event.Records {
 		userId := *record.MessageAttributes["UserId"].StringValue
 		taskId := *record.MessageAttributes["TaskId"].StringValue
@@ -73,7 +71,7 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 		log.Printf("Start Syncing task %s", taskId)
 		var user UserRepository.User
 		userObjectId, _ := primitive.ObjectIDFromHex(userId)
-		err := userRepository.FindOne(context.TODO(), bson.M{"_id": userObjectId}).Decode(&user)
+		err := this.userRepository.FindOne(context.TODO(), bson.M{"_id": userObjectId}).Decode(&user)
 		if err != nil {
 			log.Println(err)
 			return internalErrorhandler(taskId, "error: user not found")
@@ -147,23 +145,23 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 				return err
 			}
 
-			_, err = categoryRepository.DeleteMany(sc, bson.M{"user": userObjectId})
+			_, err = this.categoryRepository.DeleteMany(sc, bson.M{"user": userObjectId})
 			if err != nil {
 				return err
 			}
 
 			categoriesForInsert, newCategoryIdMap := collateCategoryItems(categoryItems, userObjectId)
 
-			if _, err = categoryRepository.InsertMany(sc, categoriesForInsert); err != nil {
+			if _, err = this.categoryRepository.InsertMany(sc, categoriesForInsert); err != nil {
 				return err
 			}
 
-			if _, err = entryRepository.DeleteMany(sc, bson.M{"user": userObjectId}); err != nil {
+			if _, err = this.entryRepository.DeleteMany(sc, bson.M{"user": userObjectId}); err != nil {
 				return err
 			}
 
 			entriesForInsert := collateEntryItems(entryItems, newCategoryIdMap, userObjectId)
-			_, err = entryRepository.InsertMany(sc, entriesForInsert)
+			_, err = this.entryRepository.InsertMany(sc, entriesForInsert)
 
 			if err != nil {
 				return err
@@ -239,5 +237,7 @@ func collateEntryItems(entryItems []EntryItem, cateIdMap map[string]primitive.Ob
 
 func main() {
 	defer mongodb.Disconnect()()
-	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(Handler)))
+	invoker := Invoker{}
+
+	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(invoker.Invoke, &invoker)))
 }

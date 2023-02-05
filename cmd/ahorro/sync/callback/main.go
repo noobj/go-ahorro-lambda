@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
@@ -29,10 +28,11 @@ var internalErrorhandler = func() (events.APIGatewayProxyResponse, error) {
 	return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500)
 }
 
-func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
-	var userRepository UserRepository.UserRepository
-	container.Resolve(&userRepository)
+type Invoker struct {
+	userRepository UserRepository.UserRepository `container:"type"`
+}
 
+func (this *Invoker) Invoke(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	user, ok := helper.GetUserFromContext(ctx)
 	if !ok {
 		return authErrorhandler()
@@ -76,7 +76,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return internalErrorhandler()
 	}
 
-	_, err = userRepository.UpdateOne(context.TODO(), bson.M{"account": user.Account}, bson.M{"$set": bson.M{"googleAccessToken": token.AccessToken, "googleRefreshToken": token.RefreshToken}})
+	_, err = this.userRepository.UpdateOne(context.TODO(), bson.M{"account": user.Account}, bson.M{"$set": bson.M{"googleAccessToken": token.AccessToken, "googleRefreshToken": token.RefreshToken}})
 	if err != nil {
 		log.Println("update error", err)
 		return internalErrorhandler()
@@ -93,5 +93,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 func main() {
 	defer mongodb.Disconnect()()
-	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(Handler)))
+	invoker := Invoker{}
+
+	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(invoker.Invoke, &invoker)))
 }

@@ -8,10 +8,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/golang/mock/gomock"
-	"github.com/golobby/container/v3"
 	"github.com/joho/godotenv"
 	main "github.com/noobj/go-serverless-services/cmd/ahorro/refresh"
-	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
+	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	mockRepo "github.com/noobj/go-serverless-services/internal/repositories/mocks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -27,16 +26,16 @@ var _ = Describe("Refresh", func() {
 		log.Println("No .env file found", err)
 	}
 	var fakeRequest events.APIGatewayV2HTTPRequest
+	invoker := main.Invoker{}
 
 	BeforeEach(func() {
 		fakeRequest = events.APIGatewayV2HTTPRequest{}
 
 		ctrl := gomock.NewController(GinkgoT())
 		m := mockRepo.NewMockIRepository(ctrl)
-		loginRepoMock := LoginInfoRepository.LoginInfoRepository{IRepository: m}
-		container.Singleton(func() LoginInfoRepository.LoginInfoRepository {
-			return loginRepoMock
-		})
+		if err := helper.BindIocForTesting(m, &invoker); err != nil {
+			panic(err.Error())
+		}
 
 		fakeLoginInfoDoc := bson.M{
 			"_id":          fakeObjId,
@@ -58,7 +57,7 @@ var _ = Describe("Refresh", func() {
 				"refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwYXlsb2FkIjoiNjJiYWRjODJkNDIwMjcwMDA5YTUxMDE5In0.e5WtrcxJx0w2J6xTLzOSa6TJdR33PN9hdiipazfKmiY",
 			}
 
-			res, err := main.Handler(context.TODO(), fakeRequest)
+			res, err := invoker.Invoke(context.TODO(), fakeRequest)
 
 			header := res.Cookies
 			Expect(err).To(BeNil())
@@ -74,7 +73,7 @@ var _ = Describe("Refresh", func() {
 				tokenString,
 			}
 
-			res, err := main.Handler(context.TODO(), fakeRequest)
+			res, err := invoker.Invoke(context.TODO(), fakeRequest)
 			Expect(err).To(BeNil())
 			Expect(res.StatusCode).To(Equal(401))
 		},
