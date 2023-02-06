@@ -61,6 +61,7 @@ jobs:
     - name: Install tools
       run: |
         go get github.com/golang/mock/mockgen@v1.6.0
+        go get go.mongodb.org/mongo-driver/x/mongo/driver/ocsp@v1.9.1
         go install github.com/golang/mock/mockgen
 
     - name: Generate Mocks
