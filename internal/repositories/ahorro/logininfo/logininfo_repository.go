@@ -19,7 +19,6 @@ type LoginInfoRepository struct {
 
 func New() *LoginInfoRepository {
 	baseRepository := BaseRepository{
-		Client:     mongodb.GetInstance(),
 		Collection: mongodb.GetInstance().Database("ahorro").Collection("loginInfos"),
 	}
 	repo := LoginInfoRepository{IRepository: baseRepository}

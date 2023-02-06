@@ -11,18 +11,14 @@ type Entry struct {
 }
 
 type EntryRepository struct {
-	AbstractRepository
+	IRepository
 }
 
 func New() *EntryRepository {
-	abstractRepository := AbstractRepository{
-		BaseRepository: BaseRepository{
-			Client:     mongodb.GetInstance(),
-			Collection: mongodb.GetInstance().Database("swimCrowdDB").Collection("entries"),
-		},
+	baseRepository := BaseRepository{
+		Collection: mongodb.GetInstance().Database("swimCrowdDB").Collection("entries"),
 	}
-	repo := EntryRepository{AbstractRepository: abstractRepository}
-	repo.IRepository = abstractRepository
+	repo := EntryRepository{IRepository: baseRepository}
 
 	return &repo
 }

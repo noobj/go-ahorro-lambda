@@ -19,7 +19,6 @@ type CategoryRepository struct {
 
 func New() *CategoryRepository {
 	baseRepository := repositories.BaseRepository{
-		Client:     mongodb.GetInstance(),
 		Collection: mongodb.GetInstance().Database("ahorro").Collection("categories"),
 	}
 	repo := CategoryRepository{IRepository: baseRepository}

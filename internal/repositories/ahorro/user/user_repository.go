@@ -31,7 +31,6 @@ type IUserRepository interface {
 
 func New() *UserRepository {
 	baseRepository := repositories.BaseRepository{
-		Client:     mongodb.GetInstance(),
 		Collection: mongodb.GetInstance().Database("ahorro").Collection("users"),
 	}
 	repo := UserRepository{IRepository: baseRepository}

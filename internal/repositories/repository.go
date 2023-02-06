@@ -20,7 +20,6 @@ type IRepository interface {
 }
 
 type BaseRepository struct {
-	Client     *mongo.Client
 	Collection *mongo.Collection
 }
 
@@ -30,7 +29,7 @@ func (repo BaseRepository) InsertOne(ctx context.Context, document interface{}, 
 
 func (repo BaseRepository) Disconnect() func() {
 	return func() {
-		if err := repo.Client.Disconnect(context.TODO()); err != nil {
+		if err := repo.Collection.Database().Client().Disconnect(context.TODO()); err != nil {
 			panic(err)
 		}
 	}

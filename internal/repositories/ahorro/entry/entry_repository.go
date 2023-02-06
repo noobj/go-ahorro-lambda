@@ -30,7 +30,6 @@ type EntryRepository struct {
 
 func New() *EntryRepository {
 	baseRepository := BaseRepository{
-		Client:     mongodb.GetInstance(),
 		Collection: mongodb.GetInstance().Database("ahorro").Collection("entries"),
 	}
 	repo := EntryRepository{IRepository: baseRepository}
