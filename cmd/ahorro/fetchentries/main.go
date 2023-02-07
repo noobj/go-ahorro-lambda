@@ -7,11 +7,11 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
+	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
-	"github.com/noobj/go-serverless-services/internal/repositories"
-	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
+	"github.com/noobj/go-serverless-services/internal/mongodb"
+	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/entry"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -28,7 +28,7 @@ type Entry struct {
 type AggregateResult struct {
 	Entries  []Entry
 	Sum      float32
-	Category []AhorroRepository.Category
+	Category []EntryRepository.Category
 }
 
 type CategoryEntriesBundle struct {
@@ -46,7 +46,11 @@ func checkTimeFormat(format string, timeString string) bool {
 	return err == nil
 }
 
-func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+type Invoker struct {
+	entryRepository EntryRepository.EntryRepository `container:"type"`
+}
+
+func (this Invoker) Invoke(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	user, ok := helper.GetUserFromContext(ctx)
 	if !ok {
 		return events.APIGatewayProxyResponse{Body: "please login in", StatusCode: 401}, nil
@@ -78,8 +82,6 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	// 		excludeCondition = append(excludeCondition, condition)
 	// 	}
 	// }
-	var entryRepository repositories.IRepository
-	container.Resolve(&entryRepository)
 
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
 		{Key: "$expr", Value: bson.D{
@@ -128,7 +130,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	},
 	}}
 
-	repoResults := entryRepository.Aggregate([]bson.D{matchStage, sortStage, groupStage, sortSumStage, lookupStage})
+	repoResults := this.entryRepository.Aggregate([]bson.D{matchStage, sortStage, groupStage, sortSumStage, lookupStage})
 	var categories []CategoryEntriesBundle
 	total := float32(0.0)
 	for _, repoResult := range repoResults {
@@ -170,12 +172,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 }
 
 func main() {
-	entryRepo := AhorroRepository.New()
-	defer entryRepo.Disconnect()()
+	defer mongodb.Disconnect()()
 
-	container.Singleton(func() repositories.IRepository {
-		return entryRepo
-	})
-
-	lambda.Start(jwtMiddleWare.Auth(Handler))
+	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle[events.APIGatewayV2HTTPRequest, events.APIGatewayProxyResponse](&Invoker{})))
 }

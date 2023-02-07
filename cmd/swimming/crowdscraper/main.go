@@ -52,7 +52,7 @@ func Handler(ctx context.Context) (events.APIGatewayProxyResponse, error) {
 
 func main() {
 	entryRepo := EntryRepository.New()
-	container.Singleton(func() repositories.IRepository {
+	container.SingletonLazy(func() repositories.IRepository {
 		return entryRepo
 	})
 

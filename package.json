@@ -1,6 +1,6 @@
 {
     "name": "lambda-golang-offline",
-    "description": "To run the golanf lambda service locally",
+    "description": "To run the golang lambda service locally",
     "version": "1.0.0",
     "scripts": {
         "start": "SLS_DEBUG=* node ./node_modules/.bin/serverless offline --host 0.0.0.0 start --useDocker",

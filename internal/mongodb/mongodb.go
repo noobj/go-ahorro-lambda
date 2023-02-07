@@ -48,3 +48,15 @@ func GetInstance() *mongo.Client {
 
 	return clientInstance
 }
+
+func Disconnect() func() {
+	return func() {
+		if clientInstance == nil {
+			return
+		}
+
+		if err := clientInstance.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}
+}

@@ -14,18 +14,14 @@ type Category struct {
 }
 
 type CategoryRepository struct {
-	repositories.AbstractRepository
+	repositories.IRepository
 }
 
 func New() *CategoryRepository {
-	abstractRepository := repositories.AbstractRepository{
-		BaseRepository: repositories.BaseRepository{
-			Client:     mongodb.GetInstance(),
-			Collection: mongodb.GetInstance().Database("ahorro").Collection("categories"),
-		},
+	baseRepository := repositories.BaseRepository{
+		Collection: mongodb.GetInstance().Database("ahorro").Collection("categories"),
 	}
-	repo := CategoryRepository{AbstractRepository: abstractRepository}
-	repo.IRepository = abstractRepository
+	repo := CategoryRepository{IRepository: baseRepository}
 
 	return &repo
 }

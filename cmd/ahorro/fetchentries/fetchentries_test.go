@@ -6,10 +6,8 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/golang/mock/gomock"
-	"github.com/golobby/container/v3"
 	main "github.com/noobj/go-serverless-services/cmd/ahorro/fetchentries"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
-	"github.com/noobj/go-serverless-services/internal/repositories"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	. "github.com/noobj/go-serverless-services/internal/repositories/mocks"
 	. "github.com/onsi/ginkgo/v2"
@@ -70,19 +68,21 @@ var fakeData = []bson.M{
 var _ = Describe("Fetchentries", func() {
 	var fakeRequest events.APIGatewayV2HTTPRequest
 	var ctx context.Context
+	invoker := main.Invoker{}
 
 	BeforeEach(func() {
 		ctrl := gomock.NewController(GinkgoT())
 		m := NewMockIRepository(ctrl)
+
+		if err := helper.BindIocForTesting(m, &invoker); err != nil {
+			panic(err.Error())
+		}
 		ctx = context.WithValue(context.Background(), helper.ContextKeyUser, UserRepository.User{
 			Id:       fakeObjId,
 			Account:  "jjj",
 			Password: "123456",
 		})
 
-		container.Singleton(func() repositories.IRepository {
-			return m
-		})
 		fakeRequest.QueryStringParameters = make(map[string]string)
 		fakeRequest.QueryStringParameters["timeStart"] = "2022-01-01"
 		fakeRequest.QueryStringParameters["timeEnd"] = "2022-01-31"
@@ -94,14 +94,14 @@ var _ = Describe("Fetchentries", func() {
 	Context("when handler return expected json response", func() {
 		It("should pass", func() {
 			expectedRes := "{\"categories\":[{\"_id\":\"62badc82d420270009a51019\",\"sum\":110,\"percentage\":\"0.55\",\"name\":\"Food\",\"entries\":[{\"_id\":\"62badc82d420270009a51019\",\"amount\":110,\"date\":\"2022-01-05\",\"descr\":\"fuck\"}],\"color\":\"#a4e56c\"},{\"_id\":\"62badc82d420270009a51019\",\"sum\":90,\"percentage\":\"0.45\",\"name\":\"Abc\",\"entries\":[{\"_id\":\"62badc82d420270009a51019\",\"amount\":90,\"date\":\"2022-01-05\",\"descr\":\"fuck\"}],\"color\":\"#a4e51c\"}],\"total\":200}"
-			res, err := main.Handler(ctx, fakeRequest)
+			res, err := invoker.Invoke(ctx, fakeRequest)
 			fmt.Printf("%+v", res.Body)
 			Expect(res.Body).To(Equal(expectedRes))
 			Expect(err).To(BeNil())
 		})
 
 		It("should failed with wrong query string format", func() {
-			res, err := main.Handler(ctx, events.APIGatewayV2HTTPRequest{})
+			res, err := invoker.Invoke(ctx, events.APIGatewayV2HTTPRequest{})
 			Expect(res.Body).To(Equal("request query error"))
 			Expect(res.StatusCode).To(Equal(400))
 			Expect(err).To(BeNil())
@@ -109,7 +109,7 @@ var _ = Describe("Fetchentries", func() {
 
 		It("should failed for not logining in", func() {
 			ctx = context.TODO()
-			res, err := main.Handler(ctx, fakeRequest)
+			res, err := invoker.Invoke(ctx, fakeRequest)
 			Expect(res.Body).To(Equal("please login in"))
 			Expect(res.StatusCode).To(Equal(401))
 			Expect(err).To(BeNil())

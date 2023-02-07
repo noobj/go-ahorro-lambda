@@ -14,6 +14,7 @@ import (
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
+	"github.com/noobj/go-serverless-services/internal/mongodb"
 	"golang.org/x/oauth2"
 	drive "google.golang.org/api/drive/v3"
 )
@@ -86,5 +87,6 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 }
 
 func main() {
-	lambda.Start(jwtMiddleWare.Auth(Handler))
+	defer mongodb.Disconnect()()
+	lambda.Start(jwtMiddleWare.Handle(Handler))
 }

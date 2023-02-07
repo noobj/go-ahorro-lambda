@@ -9,10 +9,10 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/golobby/container/v3"
 	"github.com/noobj/go-serverless-services/internal/config"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
-	"github.com/noobj/go-serverless-services/internal/repositories"
+	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
+	"github.com/noobj/go-serverless-services/internal/mongodb"
 	LoginInfoRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/logininfo"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -24,7 +24,11 @@ type LoginDto struct {
 
 var errorHandler = helper.GenerateErrorResponse[events.APIGatewayV2HTTPResponse]
 
-func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+type Invoker struct {
+	loginInfoRepository LoginInfoRepository.LoginInfoRepository `container:"type"`
+}
+
+func (this *Invoker) Invoke(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	cookiesMap := helper.ParseCookie(request.Cookies)
 
 	if _, ok := cookiesMap["refresh_token"]; !ok {
@@ -43,10 +47,8 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		return errorHandler(401)
 	}
 
-	var loginInfoRepository repositories.IRepository
 	var loginInfo LoginInfoRepository.LoginInfo
-	container.NamedResolve(&loginInfoRepository, "LoginInfoRepo")
-	loginInfoRepository.FindOne(context.TODO(), bson.M{"refreshToken": cookiesMap["refresh_token"]}).Decode(&loginInfo)
+	this.loginInfoRepository.FindOne(context.TODO(), bson.M{"refreshToken": cookiesMap["refresh_token"]}).Decode(&loginInfo)
 
 	if loginInfo.User.Hex() != userId {
 		fmt.Println("Didn't match or find the loginInfo user", loginInfo.User.Hex(), userId)
@@ -84,12 +86,7 @@ func Handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 }
 
 func main() {
-	repo := LoginInfoRepository.New()
+	defer mongodb.Disconnect()()
 
-	container.NamedSingleton("LoginInfoRepo", func() repositories.IRepository {
-		return repo
-	})
-	defer repo.Disconnect()()
-
-	lambda.Start(Handler)
+	lambda.Start(bindioc.Handle[events.APIGatewayV2HTTPRequest, events.APIGatewayV2HTTPResponse](&Invoker{}))
 }

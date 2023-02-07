@@ -8,12 +8,14 @@ import (
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"github.com/noobj/jwtmiddleware"
+
+	// TODO: use internal types instead
 	"github.com/noobj/jwtmiddleware/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func Auth[T types.ApiRequest, R types.ApiResponse](f types.HandlerFunc[T, R]) types.HandlerFunc[T, R] {
+func Handle[T types.ApiRequest, R types.ApiResponse](f types.HandlerFunc[T, R]) types.HandlerFunc[T, R] {
 	return jwtmiddleware.Handle(f, payloadHandler)
 }
 

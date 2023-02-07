@@ -13,13 +13,13 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/golobby/container/v3"
 	"github.com/mitchellh/mapstructure"
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
+	bindioc "github.com/noobj/go-serverless-services/internal/middleware/bind-ioc"
+	jwtMiddleWare "github.com/noobj/go-serverless-services/internal/middleware/jwt_auth"
 	"github.com/noobj/go-serverless-services/internal/mongodb"
-	"github.com/noobj/go-serverless-services/internal/repositories"
-	AhorroRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro"
 	CategoryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/category"
+	EntryRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/entry"
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -57,14 +57,13 @@ var internalErrorhandler = func(taskId string, message ...string) (events.APIGat
 	return helper.GenerateErrorResponse[events.APIGatewayProxyResponse](500, message...)
 }
 
-func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxyResponse, error) {
-	var userRepository repositories.IRepository
-	container.NamedResolve(&userRepository, "UserRepo")
-	var categoryRepository repositories.IRepository
-	container.NamedResolve(&categoryRepository, "CategoryRepo")
-	var entryRepository repositories.IRepository
-	container.NamedResolve(&entryRepository, "EntryRepo")
+type Invoker struct {
+	userRepository     UserRepository.UserRepository         `container:"type"`
+	entryRepository    EntryRepository.EntryRepository       `container:"type"`
+	categoryRepository CategoryRepository.CategoryRepository `container:"type"`
+}
 
+func (this *Invoker) Invoke(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxyResponse, error) {
 	for _, record := range event.Records {
 		userId := *record.MessageAttributes["UserId"].StringValue
 		taskId := *record.MessageAttributes["TaskId"].StringValue
@@ -72,7 +71,7 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 		log.Printf("Start Syncing task %s", taskId)
 		var user UserRepository.User
 		userObjectId, _ := primitive.ObjectIDFromHex(userId)
-		err := userRepository.FindOne(context.TODO(), bson.M{"_id": userObjectId}).Decode(&user)
+		err := this.userRepository.FindOne(context.TODO(), bson.M{"_id": userObjectId}).Decode(&user)
 		if err != nil {
 			log.Println(err)
 			return internalErrorhandler(taskId, "error: user not found")
@@ -146,23 +145,23 @@ func Handler(ctx context.Context, event events.SQSEvent) (events.APIGatewayProxy
 				return err
 			}
 
-			_, err = categoryRepository.DeleteMany(sc, bson.M{"user": userObjectId})
+			_, err = this.categoryRepository.DeleteMany(sc, bson.M{"user": userObjectId})
 			if err != nil {
 				return err
 			}
 
 			categoriesForInsert, newCategoryIdMap := collateCategoryItems(categoryItems, userObjectId)
 
-			if _, err = categoryRepository.InsertMany(sc, categoriesForInsert); err != nil {
+			if _, err = this.categoryRepository.InsertMany(sc, categoriesForInsert); err != nil {
 				return err
 			}
 
-			if _, err = entryRepository.DeleteMany(sc, bson.M{"user": userObjectId}); err != nil {
+			if _, err = this.entryRepository.DeleteMany(sc, bson.M{"user": userObjectId}); err != nil {
 				return err
 			}
 
 			entriesForInsert := collateEntryItems(entryItems, newCategoryIdMap, userObjectId)
-			_, err = entryRepository.InsertMany(sc, entriesForInsert)
+			_, err = this.entryRepository.InsertMany(sc, entriesForInsert)
 
 			if err != nil {
 				return err
@@ -237,19 +236,7 @@ func collateEntryItems(entryItems []EntryItem, cateIdMap map[string]primitive.Ob
 }
 
 func main() {
-	userRepo := UserRepository.New()
-	defer userRepo.Disconnect()()
-	container.NamedSingleton("UserRepo", func() repositories.IRepository {
-		return userRepo
-	})
+	defer mongodb.Disconnect()()
 
-	container.NamedSingleton("CategoryRepo", func() repositories.IRepository {
-		return CategoryRepository.New()
-	})
-
-	container.NamedSingleton("EntryRepo", func() repositories.IRepository {
-		return AhorroRepository.New()
-	})
-
-	lambda.Start(Handler)
+	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle[events.SQSEvent, events.APIGatewayProxyResponse](&Invoker{})))
 }
