@@ -237,7 +237,6 @@ func collateEntryItems(entryItems []EntryItem, cateIdMap map[string]primitive.Ob
 
 func main() {
 	defer mongodb.Disconnect()()
-	invoker := Invoker{}
 
-	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(invoker.Invoke, &invoker)))
+	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle[events.SQSEvent, events.APIGatewayProxyResponse](&Invoker{})))
 }

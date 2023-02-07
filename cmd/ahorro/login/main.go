@@ -25,7 +25,7 @@ type LoginDto struct {
 	Password string
 }
 
-func (this *Invoker) insertNewRefreshTokenIntoLoginInfo(userId primitive.ObjectID, refreshToken string) {
+func (this Invoker) insertNewRefreshTokenIntoLoginInfo(userId primitive.ObjectID, refreshToken string) {
 	loginInfo := LoginInfoRepository.LoginInfo{
 		User:         userId,
 		RefreshToken: refreshToken,
@@ -39,7 +39,7 @@ type Invoker struct {
 	loginInfoRepository LoginInfoRepository.LoginInfoRepository `container:"type"`
 }
 
-func (this *Invoker) Invoke(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayV2HTTPResponse, error) {
+func (this Invoker) Invoke(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayV2HTTPResponse, error) {
 	var requestBody LoginDto
 
 	formData, err := helper.ParseMultipartForm(request.Headers["content-type"], strings.NewReader(request.Body), request.IsBase64Encoded)
@@ -118,7 +118,6 @@ func (this *Invoker) Invoke(ctx context.Context, request events.APIGatewayProxyR
 
 func main() {
 	defer mongodb.Disconnect()()
-	invoker := Invoker{}
 
-	lambda.Start(bindioc.Handle(invoker.Invoke, &invoker))
+	lambda.Start(bindioc.Handle[events.APIGatewayProxyRequest, events.APIGatewayV2HTTPResponse](&Invoker{}))
 }

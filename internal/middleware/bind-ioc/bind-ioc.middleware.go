@@ -8,6 +8,7 @@ import (
 	"github.com/golobby/container/v3"
 
 	// TODO: use internal types instead
+	typesInternal "github.com/noobj/go-serverless-services/internal/types"
 	"github.com/noobj/jwtmiddleware/types"
 
 	"github.com/noobj/go-serverless-services/internal/helpers/helper"
@@ -17,10 +18,10 @@ import (
 	UserRepository "github.com/noobj/go-serverless-services/internal/repositories/ahorro/user"
 )
 
-func Handle[T types.ApiRequest, R types.ApiResponse](next types.HandlerFunc[T, R], invoker interface{}) types.HandlerFunc[T, R] {
+func Handle[T types.ApiRequest, R types.ApiResponse](invoker typesInternal.IIvoker[T, R]) types.HandlerFunc[T, R] {
 	return func(ctx context.Context, request T) (R, error) {
 		receiverType := reflect.TypeOf(invoker)
-		if receiverType == nil || receiverType.Kind() == reflect.Ptr {
+		if receiverType == nil || receiverType.Kind() != reflect.Ptr {
 			log.Println("container: invalid invoker type")
 			return helper.GenerateErrorResponse[R](500)
 		}
@@ -47,6 +48,6 @@ func Handle[T types.ApiRequest, R types.ApiResponse](next types.HandlerFunc[T, R
 			return helper.GenerateErrorResponse[R](500)
 		}
 
-		return next(ctx, request)
+		return invoker.Invoke(ctx, request)
 	}
 }

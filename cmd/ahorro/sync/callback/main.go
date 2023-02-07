@@ -93,7 +93,6 @@ func (this *Invoker) Invoke(ctx context.Context, request events.APIGatewayV2HTTP
 
 func main() {
 	defer mongodb.Disconnect()()
-	invoker := Invoker{}
 
-	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle(invoker.Invoke, &invoker)))
+	lambda.Start(jwtMiddleWare.Handle(bindioc.Handle[events.APIGatewayV2HTTPRequest, events.APIGatewayProxyResponse](&Invoker{})))
 }
