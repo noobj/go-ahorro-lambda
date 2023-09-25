@@ -20,20 +20,20 @@ type Response events.APIGatewayProxyResponse
 
 type Entry struct {
 	Id     primitive.ObjectID `json:"_id" bson:"_id"`
-	Amount float32            `json:"amount" bson:"amount"`
+	Amount float64            `json:"amount" bson:"amount"`
 	Date   string             `json:"date"`
 	Descr  string             `json:"descr"`
 }
 
 type AggregateResult struct {
 	Entries  []Entry
-	Sum      float32
+	Sum      float64
 	Category []EntryRepository.Category
 }
 
 type CategoryEntriesBundle struct {
 	Id         primitive.ObjectID `json:"_id" bson:"_id"`
-	Sum        float32            `json:"sum"`
+	Sum        float64            `json:"sum"`
 	Percentage string             `json:"percentage"`
 	Name       string             `json:"name"`
 	Entries    []Entry            `json:"entries"`
@@ -132,7 +132,7 @@ func (this Invoker) Invoke(ctx context.Context, request events.APIGatewayV2HTTPR
 
 	repoResults := this.entryRepository.Aggregate([]bson.D{matchStage, sortStage, groupStage, sortSumStage, lookupStage})
 	var categories []CategoryEntriesBundle
-	total := float32(0.0)
+	total := float64(0.0)
 	for _, repoResult := range repoResults {
 		fmt.Printf("%+v", repoResult)
 		doc, _ := bson.Marshal(repoResult)
@@ -156,13 +156,13 @@ func (this Invoker) Invoke(ctx context.Context, request events.APIGatewayV2HTTPR
 	}
 
 	for key, category := range categories {
-		percentage := float32(category.Sum) / float32(total)
+		percentage := float64(category.Sum) / float64(total)
 		categories[key].Percentage = fmt.Sprintf("%.2f", percentage)
 	}
 
 	resultForReturn := struct {
 		Categories []CategoryEntriesBundle `json:"categories"`
-		Total      float32                 `json:"total"`
+		Total      float64                 `json:"total"`
 	}{
 		Categories: categories,
 		Total:      total,

@@ -9,7 +9,7 @@ import (
 
 type Entry struct {
 	Id       primitive.ObjectID `json:"_id" bson:"_id"`
-	Amount   float32            `json:"amount" bson:"amount"`
+	Amount   float64            `json:"amount" bson:"amount"`
 	Date     string             `json:"date"`
 	Descr    string             `json:"descr"`
 	Category primitive.ObjectID `json:"category,omitempty" bson:"category,omitempty"`
